@@ -7,10 +7,10 @@ export const metadata: Metadata = {
   description: "Sistema integrado para Instituições de Longa Permanência para Idosos: Quadro de Plantão, Checagem de Medicamentos em Tempo Real, Prontuário e Rotina do Cuidador.",
   icons: {
     icon: [
-      { url: '/icon.svg?v=omnisenior', type: 'image/svg+xml' }
+      { url: '/icon.svg?v=omnisenior-logo', type: 'image/svg+xml' }
     ],
-    shortcut: '/icon.svg?v=omnisenior',
-    apple: '/icon.svg?v=omnisenior',
+    shortcut: '/icon.svg?v=omnisenior-logo',
+    apple: '/icon.svg?v=omnisenior-logo',
   },
 };
 
