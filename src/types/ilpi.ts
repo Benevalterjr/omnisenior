@@ -28,6 +28,10 @@ export interface Resident {
   photoUrl?: string;
   status?: 'active' | 'hospitalized' | 'leave';
   notes?: string;
+  bradenRisk?: 'muito_alto' | 'alto' | 'moderado' | 'baixo' | 'sem_risco';
+  morseRisk?: 'baixo' | 'moderado' | 'alto';
+  katzDegree?: 'grau_1' | 'grau_2' | 'grau_3';
+  latestAssessment?: GeriatricAssessment;
   createdAt?: any;
 }
 
@@ -129,4 +133,60 @@ export interface CaregiverRoutine {
   };
 }
 
+export interface BradenScale {
+  sensoryPerception: 1 | 2 | 3 | 4; // 1: Totalmente limitado, 2: Muito limitado, 3: Levemente limitado, 4: Nenhuma limitação
+  moisture: 1 | 2 | 3 | 4;          // 1: Constantemente úmida, 2: Muito úmida, 3: Ocasionalmente úmida, 4: Raramente úmida
+  activity: 1 | 2 | 3 | 4;          // 1: Acamado, 2: Confinado à cadeira, 3: Deambula ocasionalmente, 4: Deambula frequentemente
+  mobility: 1 | 2 | 3 | 4;          // 1: Totalmente imóvel, 2: Muito limitado, 3: Levemente limitado, 4: Não apresenta limitações
+  nutrition: 1 | 2 | 3 | 4;         // 1: Muito pobre, 2: Provavelmente inadequada, 3: Adequada, 4: Excelente
+  frictionShear: 1 | 2 | 3;         // 1: Problema, 2: Problema potencial, 3: Nenhum problema aparente
+  totalScore: number;               // 6 a 23
+  riskLevel: 'muito_alto' | 'alto' | 'moderado' | 'baixo' | 'sem_risco';
+  recommendedActions: string[];
+}
+
+export interface MorseScale {
+  fallHistory: 0 | 25;              // 0: Não, 25: Sim (últimos 3 meses)
+  secondaryDiagnosis: 0 | 15;       // 0: Não, 15: Sim (mais de 1 diagnóstico)
+  ambulatoryAid: 0 | 15 | 30;        // 0: Nenhuma/acamado/auxiliado por profissional, 15: Bengala/muleta/andador, 30: Apoia-se na mobília
+  ivTherapy: 0 | 20;                // 0: Não, 20: Sim (acesso venoso / heparina / soroterapia)
+  gait: 0 | 10 | 20;                 // 0: Normal/acamado/cadeira de rodas, 10: Fraca/passos curtos, 20: Comprometida/cambaleante
+  mentalStatus: 0 | 15;             // 0: Orientado sobre suas limitações, 15: Superestima capacidade / esquece limitações
+  totalScore: number;               // 0 a 125
+  riskLevel: 'baixo' | 'moderado' | 'alto';
+  recommendedActions: string[];
+}
+
+export interface KatzScale {
+  bathing: 0 | 1;                   // 1: Independente, 0: Dependente
+  dressing: 0 | 1;                  // 1: Independente, 0: Dependente
+  toileting: 0 | 1;                 // 1: Independente, 0: Dependente
+  transferring: 0 | 1;              // 1: Independente, 0: Dependente
+  continence: 0 | 1;                // 1: Independente, 0: Dependente
+  feeding: 0 | 1;                   // 1: Independente, 0: Dependente
+  totalScore: number;               // 0 a 6
+  dependencyDegree: 'grau_1' | 'grau_2' | 'grau_3'; // Classificação ANVISA RDC 502/2021
+  dependencyDescription: string;
+  recommendedCaregiverRatio: string; // Ex: "1 cuidador para cada 10 residentes"
+}
+
+export interface GeriatricAssessment {
+  id: string;
+  residentId: string;
+  residentName?: string;
+  date: string; // ISO ou DD/MM/AAAA
+  evaluatedBy: {
+    uid: string;
+    name: string;
+    role: UserRole;
+    registry?: string;
+  };
+  braden: BradenScale;
+  morse: MorseScale;
+  katz: KatzScale;
+  clinicalSummary: string;
+  createdAt?: any;
+}
+
 export type ShiftType = 'manha' | 'tarde' | 'noite';
+

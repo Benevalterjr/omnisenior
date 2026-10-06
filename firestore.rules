@@ -42,6 +42,12 @@ service cloud.firestore {
         allow read: if isAuthenticated();
         allow write: if isAuthenticated() && getUserRole() in ['admin', 'enfermeiro', 'cuidador'];
       }
+
+      // Escalas geriátricas (Braden, Morse, Katz): médicos e enfermeiros aplicam
+      match /geriatric_assessments/{assessmentId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && getUserRole() in ['admin', 'medico', 'enfermeiro'];
+      }
     }
   }
 }

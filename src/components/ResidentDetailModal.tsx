@@ -8,7 +8,8 @@ import {
   Evolution, 
   IndividualInventoryItem, 
   UserRole,
-  EvolutionType
+  EvolutionType,
+  GeriatricAssessment
 } from '@/types/ilpi';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -26,16 +27,21 @@ import {
   XCircle, 
   AlertCircle,
   User,
-  PlusCircle
+  PlusCircle,
+  ShieldAlert,
+  Sparkles,
+  History
 } from 'lucide-react';
 import { 
   subscribeResidentPrescriptions, 
   subscribeResidentEvolutions, 
   subscribeResidentInventory,
+  subscribeResidentAssessments,
   createEvolution,
   updateInventoryQuantity,
   createPrescription
 } from '@/lib/firebaseService';
+import { EscalasGeriatricasModal } from './EscalasGeriatricasModal';
 
 interface ResidentDetailModalProps {
   resident: Resident;
@@ -53,12 +59,14 @@ export function ResidentDetailModal({
   onCheckMedicationClick
 }: ResidentDetailModalProps) {
   const { currentUser, canManagePrescriptions, canEditInventory } = useAuth();
-  const [activeTab, setActiveTab] = useState<'prescricoes' | 'checagens' | 'evolucoes' | 'estoque'>('prescricoes');
+  const [activeTab, setActiveTab] = useState<'prescricoes' | 'checagens' | 'evolucoes' | 'estoque' | 'escalas'>('prescricoes');
 
   // Subcollections state with real-time listeners
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [evolutions, setEvolutions] = useState<Evolution[]>([]);
   const [inventory, setInventory] = useState<IndividualInventoryItem[]>([]);
+  const [assessments, setAssessments] = useState<GeriatricAssessment[]>([]);
+  const [isScalesModalOpen, setIsScalesModalOpen] = useState(false);
 
   // New Evolution form state
   const [newEvoType, setNewEvoType] = useState<EvolutionType>('enfermagem');
@@ -84,11 +92,13 @@ export function ResidentDetailModal({
     const unsubPresc = subscribeResidentPrescriptions(resident.id, setPrescriptions);
     const unsubEvo = subscribeResidentEvolutions(resident.id, setEvolutions);
     const unsubInv = subscribeResidentInventory(resident.id, setInventory);
+    const unsubAssess = subscribeResidentAssessments(resident.id, setAssessments);
 
     return () => {
       unsubPresc();
       unsubEvo();
       unsubInv();
+      unsubAssess();
     };
   }, [resident.id]);
 
@@ -274,6 +284,18 @@ export function ResidentDetailModal({
           >
             <Package className="w-4 h-4" />
             <span>Estoque Individual ({inventory.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('escalas')}
+            className={`py-3 text-xs font-bold border-b-2 flex items-center space-x-2 transition ${
+              activeTab === 'escalas'
+                ? 'border-teal-600 text-teal-700'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <ShieldAlert className="w-4 h-4" />
+            <span>Escalas Geriátricas ({assessments.length})</span>
           </button>
         </div>
 
@@ -662,6 +684,144 @@ export function ResidentDetailModal({
               )}
             </div>
           )}
+
+          {/* TAB 5: ESCALAS GERIÁTRICAS */}
+          {activeTab === 'escalas' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800 flex items-center space-x-2">
+                    <ShieldAlert className="w-4 h-4 text-teal-600" />
+                    <span>Escalas Geriátricas Automatizadas</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Avaliação clínica integrada: Braden (LPP), Morse (Quedas) e Katz (Grau de Dependência ANVISA RDC 502/2021).
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsScalesModalOpen(true)}
+                  className="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-xs shrink-0 self-start sm:self-auto"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-teal-300" />
+                  <span>Aplicar Nova Avaliação</span>
+                </button>
+              </div>
+
+              {assessments.length === 0 ? (
+                <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  <ShieldAlert className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                  <h4 className="text-sm font-bold text-slate-700">Nenhuma avaliação geriátrica registrada</h4>
+                  <p className="text-xs text-slate-500 mt-1 mb-4">
+                    Avalie o risco de queda (Morse), risco de lesão por pressão (Braden) e grau de dependência da ANVISA (Katz).
+                  </p>
+                  <button
+                    onClick={() => setIsScalesModalOpen(true)}
+                    className="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
+                  >
+                    Iniciar Primeira Avaliação
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Latest Assessment Highlights */}
+                  {(() => {
+                    const latest = assessments[0];
+                    return (
+                      <div className="bg-gradient-to-br from-slate-900 to-teal-950 text-white rounded-2xl p-5 shadow-sm space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-teal-300">Última Avaliação Vigente</span>
+                            <h4 className="text-base font-bold text-white mt-0.5">{latest.date}</h4>
+                          </div>
+                          <span className="text-xs text-teal-200/80">
+                            Avaliador: {latest.evaluatedBy.name} ({latest.evaluatedBy.registry || latest.evaluatedBy.role})
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="bg-white/10 backdrop-blur-md rounded-xl p-3.5 border border-white/15">
+                            <span className="text-[10px] font-bold text-teal-300 uppercase">1. Braden (LPP)</span>
+                            <div className="flex items-baseline space-x-2 mt-1">
+                              <span className="text-2xl font-black text-white">{latest.braden.totalScore}</span>
+                              <span className="text-xs text-white/60">/ 23 pts</span>
+                            </div>
+                            <span className="inline-block text-[11px] font-bold mt-1.5 px-2 py-0.5 rounded-full bg-white/20 text-white">
+                              {latest.braden.riskLevel.toUpperCase().replace('_', ' ')}
+                            </span>
+                          </div>
+
+                          <div className="bg-white/10 backdrop-blur-md rounded-xl p-3.5 border border-white/15">
+                            <span className="text-[10px] font-bold text-amber-300 uppercase">2. Morse (Quedas)</span>
+                            <div className="flex items-baseline space-x-2 mt-1">
+                              <span className="text-2xl font-black text-white">{latest.morse.totalScore}</span>
+                              <span className="text-xs text-white/60">/ 125 pts</span>
+                            </div>
+                            <span className="inline-block text-[11px] font-bold mt-1.5 px-2 py-0.5 rounded-full bg-white/20 text-white">
+                              {latest.morse.riskLevel.toUpperCase()} RISCO
+                            </span>
+                          </div>
+
+                          <div className="bg-white/10 backdrop-blur-md rounded-xl p-3.5 border border-white/15">
+                            <span className="text-[10px] font-bold text-blue-300 uppercase">3. Katz (ANVISA)</span>
+                            <div className="flex items-baseline space-x-2 mt-1">
+                              <span className="text-2xl font-black text-white">{latest.katz.totalScore}</span>
+                              <span className="text-xs text-white/60">/ 6 ABVDs</span>
+                            </div>
+                            <span className="inline-block text-[11px] font-bold mt-1.5 px-2 py-0.5 rounded-full bg-white/20 text-white">
+                              {latest.katz.dependencyDegree.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Cuidados ativos */}
+                        <div className="bg-white/5 rounded-xl p-3 border border-white/10 space-y-2">
+                          <span className="text-xs font-bold text-teal-300 block">Condutas Preventivas Recomendadas:</span>
+                          <ul className="text-xs text-slate-200 list-disc list-inside space-y-0.5">
+                            {latest.braden.recommendedActions.slice(0, 2).map((a, i) => (
+                              <li key={i}>{a}</li>
+                            ))}
+                            {latest.morse.recommendedActions.slice(0, 2).map((a, i) => (
+                              <li key={i}>{a}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Histórico anterior */}
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Histórico de Aplicações ({assessments.length})</h4>
+                    <div className="space-y-2">
+                      {assessments.map((a) => (
+                        <div key={a.id} className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex items-center justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-slate-800">{a.date}</span>
+                            <span className="text-xs text-slate-500 ml-2">por {a.evaluatedBy.name}</span>
+                            <div className="flex items-center space-x-2 mt-1 text-[11px]">
+                              <span className="font-semibold text-teal-700">Braden: {a.braden.totalScore} pts</span>
+                              <span>•</span>
+                              <span className="font-semibold text-amber-700">Morse: {a.morse.totalScore} pts</span>
+                              <span>•</span>
+                              <span className="font-semibold text-blue-700">Katz: {a.katz.totalScore}/6</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setIsScalesModalOpen(true)}
+                            className="text-xs font-bold text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg border border-teal-200 transition"
+                          >
+                            Ver Detalhes
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Modal footer */}
@@ -770,6 +930,13 @@ export function ResidentDetailModal({
           </div>
         </div>
       )}
+
+      {/* Modal de Escalas Geriátricas Automatizadas */}
+      <EscalasGeriatricasModal
+        resident={resident}
+        isOpen={isScalesModalOpen}
+        onClose={() => setIsScalesModalOpen(false)}
+      />
     </div>
   );
 }

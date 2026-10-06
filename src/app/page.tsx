@@ -21,6 +21,7 @@ import { ResidentDetailModal } from '@/components/ResidentDetailModal';
 import { RegistroRotinaModal } from '@/components/RegistroRotinaModal';
 import { NovoResidenteModal } from '@/components/NovoResidenteModal';
 import { CheckMedicationModal } from '@/components/CheckMedicationModal';
+import { EscalasGeriatricasModal } from '@/components/EscalasGeriatricasModal';
 import { CalendarView } from '@/components/Calendar/CalendarView';
 import { HeartHandshake } from 'lucide-react';
 
@@ -36,6 +37,7 @@ export default function HomePage() {
 
   // Modals state
   const [selectedResidentForModal, setSelectedResidentForModal] = useState<Resident | null>(null);
+  const [selectedResidentForScales, setSelectedResidentForScales] = useState<Resident | null>(null);
   const [isNewResidentModalOpen, setIsNewResidentModalOpen] = useState(false);
   const [isQuickRoutineModalOpen, setIsQuickRoutineModalOpen] = useState(false);
   const [quickRoutineResidentId, setQuickRoutineResidentId] = useState<string | undefined>(undefined);
@@ -203,6 +205,7 @@ export default function HomePage() {
             onOpenResidentModal={(resident) => setSelectedResidentForModal(resident)}
             onOpenQuickRoutine={handleOpenQuickRoutine}
             onOpenNewResident={() => setIsNewResidentModalOpen(true)}
+            onOpenScalesModal={(resident) => setSelectedResidentForScales(resident)}
           />
         )}
 
@@ -272,6 +275,18 @@ export default function HomePage() {
               status, 
               notes
             );
+          }}
+        />
+      )}
+
+      {/* MODAL 5: Escalas Geriátricas Automatizadas */}
+      {selectedResidentForScales && (
+        <EscalasGeriatricasModal
+          resident={selectedResidentForScales}
+          isOpen={true}
+          onClose={() => setSelectedResidentForScales(null)}
+          onSaved={() => {
+            // refresh data if needed
           }}
         />
       )}

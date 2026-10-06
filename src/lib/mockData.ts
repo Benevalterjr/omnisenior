@@ -1,4 +1,5 @@
-import { Resident, Prescription, MedicationLog, Evolution, IndividualInventoryItem } from '@/types/ilpi';
+import { Resident, Prescription, MedicationLog, Evolution, IndividualInventoryItem, GeriatricAssessment } from '@/types/ilpi';
+import { calculateBraden, calculateMorse, calculateKatz } from './geriatricScales';
 
 export const INITIAL_RESIDENTS: Resident[] = [
   {
@@ -15,7 +16,10 @@ export const INITIAL_RESIDENTS: Resident[] = [
     ],
     photoUrl: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?auto=format&fit=crop&q=80&w=250',
     status: 'active',
-    notes: 'Necessita de auxílio para deambulação. Risco moderado de queda (Morse 45).'
+    bradenRisk: 'baixo',
+    morseRisk: 'moderado',
+    katzDegree: 'grau_2',
+    notes: 'Necessita de auxílio para deambulação. Risco moderado de queda (Morse 40). Grau II ANVISA.'
   },
   {
     id: 'res-2',
@@ -30,7 +34,10 @@ export const INITIAL_RESIDENTS: Resident[] = [
     ],
     photoUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=250',
     status: 'active',
-    notes: 'Diabético tipo 2 insulino-dependente. Monitorar glicemia capilar antes das refeições.'
+    bradenRisk: 'sem_risco',
+    morseRisk: 'baixo',
+    katzDegree: 'grau_1',
+    notes: 'Diabético tipo 2 insulino-dependente. Monitorar glicemia capilar antes das refeições. Grau I ANVISA.'
   },
   {
     id: 'res-3',
@@ -45,7 +52,10 @@ export const INITIAL_RESIDENTS: Resident[] = [
     ],
     photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=250',
     status: 'active',
-    notes: 'Quadro de demência mista (Alzheimer leve). Muito comunicativa pela manhã.'
+    bradenRisk: 'moderado',
+    morseRisk: 'alto',
+    katzDegree: 'grau_2',
+    notes: 'Quadro de demência mista (Alzheimer leve). Muito comunicativa pela manhã. Risco de Queda Alto.'
   },
   {
     id: 'res-4',
@@ -60,7 +70,10 @@ export const INITIAL_RESIDENTS: Resident[] = [
     ],
     photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=250',
     status: 'active',
-    notes: 'Acamado no momento por pós-operatório de fêmur. Mudança de decúbito de 2h em 2h.'
+    bradenRisk: 'muito_alto',
+    morseRisk: 'alto',
+    katzDegree: 'grau_3',
+    notes: 'Acamado no momento por pós-operatório de fêmur. Mudança de decúbito de 2h em 2h. Grau III ANVISA.'
   }
 ];
 
@@ -596,3 +609,123 @@ export const INITIAL_USERS = [
     registry: 'Responsável legal res-1'
   }
 ];
+
+export const INITIAL_GERIATRIC_ASSESSMENTS: Record<string, GeriatricAssessment[]> = {
+  'res-1': [
+    {
+      id: 'assess-1-1',
+      residentId: 'res-1',
+      residentName: 'Dona Sebastiana de Albuquerque',
+      date: '2026-10-01 10:30',
+      evaluatedBy: {
+        uid: 'user-enf',
+        name: 'Enf. Juliana Ramos',
+        role: 'enfermeiro',
+        registry: 'COREN/SP 456789'
+      },
+      braden: calculateBraden({
+        sensoryPerception: 3,
+        moisture: 3,
+        activity: 3,
+        mobility: 3,
+        nutrition: 3,
+        frictionShear: 2
+      }),
+      morse: calculateMorse({
+        fallHistory: 0,
+        secondaryDiagnosis: 15,
+        ambulatoryAid: 15,
+        ivTherapy: 0,
+        gait: 10,
+        mentalStatus: 0
+      }),
+      katz: calculateKatz({
+        bathing: 0,
+        dressing: 1,
+        toileting: 0,
+        transferring: 1,
+        continence: 1,
+        feeding: 1
+      }),
+      clinicalSummary: 'Residente cooperativa. Deambula com andador e apoio leve. Risco moderado de quedas. Preservada continência, porém requer auxílio no banho e higiene.'
+    }
+  ],
+  'res-2': [
+    {
+      id: 'assess-2-1',
+      residentId: 'res-2',
+      residentName: 'Seu Benedito Santos Filho',
+      date: '2026-10-02 09:15',
+      evaluatedBy: {
+        uid: 'user-enf',
+        name: 'Enf. Juliana Ramos',
+        role: 'enfermeiro',
+        registry: 'COREN/SP 456789'
+      },
+      braden: calculateBraden({
+        sensoryPerception: 4,
+        moisture: 4,
+        activity: 4,
+        mobility: 4,
+        nutrition: 3,
+        frictionShear: 3
+      }),
+      morse: calculateMorse({
+        fallHistory: 0,
+        secondaryDiagnosis: 15,
+        ambulatoryAid: 0,
+        ivTherapy: 0,
+        gait: 0,
+        mentalStatus: 0
+      }),
+      katz: calculateKatz({
+        bathing: 1,
+        dressing: 1,
+        toileting: 1,
+        transferring: 1,
+        continence: 1,
+        feeding: 1
+      }),
+      clinicalSummary: 'Residente totalmente lúcido e independente em todas as ABVDs (Grau I ANVISA). Baixo risco de quedas e sem risco para lesões por pressão.'
+    }
+  ],
+  'res-4': [
+    {
+      id: 'assess-4-1',
+      residentId: 'res-4',
+      residentName: 'Seu Antônio Carlos Fagundes',
+      date: '2026-10-04 14:00',
+      evaluatedBy: {
+        uid: 'user-med',
+        name: 'Dr. Roberto Mendes',
+        role: 'medico',
+        registry: 'CRM/SP 123456'
+      },
+      braden: calculateBraden({
+        sensoryPerception: 2,
+        moisture: 2,
+        activity: 1,
+        mobility: 1,
+        nutrition: 2,
+        frictionShear: 1
+      }),
+      morse: calculateMorse({
+        fallHistory: 25,
+        secondaryDiagnosis: 15,
+        ambulatoryAid: 0,
+        ivTherapy: 20,
+        gait: 0,
+        mentalStatus: 0
+      }),
+      katz: calculateKatz({
+        bathing: 0,
+        dressing: 0,
+        toileting: 0,
+        transferring: 0,
+        continence: 0,
+        feeding: 1
+      }),
+      clinicalSummary: 'Pós-operatório de fratura de fêmur esquerdo. Acamado, dependência total para transferências e higiene (Grau III ANVISA). Risco Muito Alto de LPP (Braden 9) e Alto Risco de Queda.'
+    }
+  ]
+};

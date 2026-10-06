@@ -278,6 +278,26 @@ export function DutyBoard({
                       <span>Alergia: {resident.allergies[0]}</span>
                     </span>
                   )}
+
+                  {/* Geriatric Risk Flags */}
+                  <div className="flex items-center space-x-1">
+                    {resident.morseRisk === 'alto' && (
+                      <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold text-[9px] border border-amber-300" title="Alto Risco de Queda (Escala de Morse)">
+                        ⚠️ Queda
+                      </span>
+                    )}
+                    {(resident.bradenRisk === 'muito_alto' || resident.bradenRisk === 'alto') && (
+                      <span className="px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-800 font-bold text-[9px] border border-rose-300" title="Alto Risco de LPP (Escala de Braden) - Mudar decúbito 2h/2h">
+                        🛡️ LPP Alto
+                      </span>
+                    )}
+                    {resident.katzDegree && (
+                      <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[9px] border border-slate-200" title="Grau de Dependência ANVISA">
+                        {resident.katzDegree === 'grau_1' ? 'G.I' : resident.katzDegree === 'grau_2' ? 'G.II' : 'G.III'}
+                      </span>
+                    )}
+                  </div>
+
                   {hasPending ? (
                     <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold text-[10px]">
                       Pendente no Plantão

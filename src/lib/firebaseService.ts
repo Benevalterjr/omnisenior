@@ -19,14 +19,16 @@ import {
   IndividualInventoryItem, 
   CaregiverRoutine,
   MedicationLogStatus,
-  UserRole
+  UserRole,
+  GeriatricAssessment
 } from '@/types/ilpi';
 import { 
   INITIAL_RESIDENTS, 
   INITIAL_PRESCRIPTIONS, 
   INITIAL_MEDICATION_LOGS, 
   INITIAL_EVOLUTIONS, 
-  INITIAL_INVENTORY 
+  INITIAL_INVENTORY,
+  INITIAL_GERIATRIC_ASSESSMENTS
 } from './mockData';
 
 // Helper: Check Medication (exact function required in user spec)
@@ -203,6 +205,35 @@ export function subscribeResidentInventory(
   }
 }
 
+// Subscribe to geriatric assessments
+export function subscribeResidentAssessments(
+  residentId: string, 
+  callback: (assessments: GeriatricAssessment[]) => void
+) {
+  try {
+    const colRef = collection(db, `residents/${residentId}/geriatric_assessments`);
+    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+      if (!snapshot.empty) {
+        const assessments: GeriatricAssessment[] = snapshot.docs.map(d => ({
+          id: d.id,
+          residentId,
+          ...d.data()
+        } as GeriatricAssessment));
+        callback(assessments);
+      } else {
+        callback(INITIAL_GERIATRIC_ASSESSMENTS[residentId] || []);
+      }
+    }, (error) => {
+      console.warn(`Firestore error for geriatric assessments (${residentId}):`, error);
+      callback(INITIAL_GERIATRIC_ASSESSMENTS[residentId] || []);
+    });
+    return unsubscribe;
+  } catch (err) {
+    callback(INITIAL_GERIATRIC_ASSESSMENTS[residentId] || []);
+    return () => {};
+  }
+}
+
 // Add a new resident
 export async function createResident(residentData: Omit<Resident, 'id'>): Promise<string> {
   try {
@@ -268,6 +299,54 @@ export async function createEvolution(
   } catch (error) {
     console.warn('Error creating evolution in Firestore:', error);
     return 'local-evo-' + Date.now();
+  }
+}
+
+// Save a geriatric assessment (Braden, Morse, Katz)
+export async function saveGeriatricAssessment(
+  residentId: string,
+  assessmentData: Omit<GeriatricAssessment, 'id'>
+): Promise<string> {
+  try {
+    const colRef = collection(db, `residents/${residentId}/geriatric_assessments`);
+    const docRef = await addDoc(colRef, {
+      ...assessmentData,
+      createdAt: serverTimestamp()
+    });
+
+    // Also update summary risk levels on resident doc
+    try {
+      const residentRef = doc(db, 'residents', residentId);
+      await updateDoc(residentRef, {
+        bradenRisk: assessmentData.braden.riskLevel,
+        morseRisk: assessmentData.morse.riskLevel,
+        katzDegree: assessmentData.katz.dependencyDegree,
+        latestAssessmentDate: assessmentData.date
+      });
+    } catch (e) {
+      // ignore non-critical resident doc update failure
+    }
+
+    // Auto-create clinical evolution record for audit trail
+    try {
+      const bradenDesc = `Braden ${assessmentData.braden.totalScore} pts (${assessmentData.braden.riskLevel.toUpperCase().replace('_', ' ')})`;
+      const morseDesc = `Morse ${assessmentData.morse.totalScore} pts (${assessmentData.morse.riskLevel.toUpperCase()} RISCO)`;
+      const katzDesc = `Katz ${assessmentData.katz.totalScore}/6 pts (${assessmentData.katz.dependencyDegree.toUpperCase()} ANVISA)`;
+      
+      await createEvolution(residentId, {
+        author: assessmentData.evaluatedBy,
+        date: assessmentData.date,
+        type: 'enfermagem',
+        text: `[Avaliação de Escalas Geriátricas] ${bradenDesc} | ${morseDesc} | ${katzDesc}. ${assessmentData.clinicalSummary || ''}`
+      });
+    } catch (e) {
+      // ignore
+    }
+
+    return docRef.id;
+  } catch (error) {
+    console.warn('Error saving geriatric assessment in Firestore:', error);
+    return 'local-assess-' + Date.now();
   }
 }
 
@@ -389,6 +468,22 @@ export async function seedFirestoreDatabase(): Promise<{ success: boolean; messa
           minAlertQuantity: i.minAlertQuantity,
           unit: i.unit || 'unidades',
           lastUpdated: serverTimestamp()
+        }, { merge: true });
+      }
+
+      // Seed Geriatric Assessments
+      const assessments = INITIAL_GERIATRIC_ASSESSMENTS[resident.id] || [];
+      for (const a of assessments) {
+        await setDoc(doc(db, `residents/${resident.id}/geriatric_assessments`, a.id), {
+          residentId: a.residentId,
+          residentName: a.residentName || resident.name,
+          date: a.date,
+          evaluatedBy: a.evaluatedBy,
+          braden: a.braden,
+          morse: a.morse,
+          katz: a.katz,
+          clinicalSummary: a.clinicalSummary || '',
+          createdAt: serverTimestamp()
         }, { merge: true });
       }
     }

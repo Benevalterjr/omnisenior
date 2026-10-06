@@ -12,7 +12,8 @@ import {
   Phone, 
   PlusCircle,
   Pill,
-  BedDouble
+  BedDouble,
+  ShieldAlert
 } from 'lucide-react';
 
 interface ResidentesListViewProps {
@@ -20,13 +21,15 @@ interface ResidentesListViewProps {
   onOpenResidentModal: (resident: Resident) => void;
   onOpenQuickRoutine: (residentId: string) => void;
   onOpenNewResident: () => void;
+  onOpenScalesModal?: (resident: Resident) => void;
 }
 
 export function ResidentesListView({
   residents,
   onOpenResidentModal,
   onOpenQuickRoutine,
-  onOpenNewResident
+  onOpenNewResident,
+  onOpenScalesModal
 }: ResidentesListViewProps) {
   const { canManageResidents } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -118,6 +121,43 @@ export function ResidentesListView({
                     </div>
                   )}
 
+                  {/* Geriatric Scales Badges */}
+                  {(resident.bradenRisk || resident.morseRisk || resident.katzDegree) && (
+                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+                      {resident.bradenRisk && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                          resident.bradenRisk === 'muito_alto' ? 'bg-rose-100 text-rose-800 border-rose-200' :
+                          resident.bradenRisk === 'alto' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                          resident.bradenRisk === 'moderado' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                          resident.bradenRisk === 'baixo' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                          'bg-emerald-100 text-emerald-800 border-emerald-200'
+                        }`}>
+                          Braden: {resident.bradenRisk.replace('_', ' ')}
+                        </span>
+                      )}
+
+                      {resident.morseRisk && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                          resident.morseRisk === 'alto' ? 'bg-rose-100 text-rose-800 border-rose-200' :
+                          resident.morseRisk === 'moderado' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                          'bg-emerald-100 text-emerald-800 border-emerald-200'
+                        }`}>
+                          Morse: {resident.morseRisk}
+                        </span>
+                      )}
+
+                      {resident.katzDegree && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                          resident.katzDegree === 'grau_3' ? 'bg-rose-100 text-rose-800 border-rose-200' :
+                          resident.katzDegree === 'grau_2' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                          'bg-blue-100 text-blue-800 border-blue-200'
+                        }`}>
+                          {resident.katzDegree === 'grau_1' ? 'Grau I ANVISA' : resident.katzDegree === 'grau_2' ? 'Grau II ANVISA' : 'Grau III ANVISA'}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   {/* Emergency Contact */}
                   {resident.emergencyContacts.length > 0 && (
                     <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
@@ -135,21 +175,32 @@ export function ResidentesListView({
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-5 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
+              <div className="mt-5 pt-3 border-t border-slate-100 grid grid-cols-3 gap-1.5">
                 <button
                   onClick={() => onOpenQuickRoutine(resident.id)}
-                  className="bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 text-xs font-semibold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1"
+                  className="bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 text-xs font-semibold py-2 px-1.5 rounded-xl transition flex items-center justify-center space-x-1"
+                  title="Registrar rotina em menos de 1 minuto"
                 >
-                  <HeartHandshake className="w-3.5 h-3.5" />
-                  <span>Rotina Rápida</span>
+                  <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Rotina</span>
+                </button>
+
+                <button
+                  onClick={() => onOpenScalesModal ? onOpenScalesModal(resident) : onOpenResidentModal(resident)}
+                  className="bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 text-xs font-semibold py-2 px-1.5 rounded-xl transition flex items-center justify-center space-x-1"
+                  title="Escalas Geriátricas Automatizadas (Braden, Morse, Katz)"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span className="truncate">Escalas</span>
                 </button>
 
                 <button
                   onClick={() => onOpenResidentModal(resident)}
-                  className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs"
+                  className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-1.5 rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs"
+                  title="Abrir prontuário completo"
                 >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Ver Prontuário</span>
+                  <Eye className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Prontuário</span>
                 </button>
               </div>
             </div>
