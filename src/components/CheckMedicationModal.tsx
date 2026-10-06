@@ -13,6 +13,7 @@ import {
   User, 
   ShieldAlert 
 } from 'lucide-react';
+import { getNtpDate } from '@/lib/ntpService';
 
 interface CheckMedicationModalProps {
   resident: Resident;
@@ -190,7 +191,7 @@ export function CheckMedicationModal({
               <span>Assinatura Digital: <strong className="text-slate-800">{currentUser.name}</strong> ({currentUser.role.toUpperCase()})</span>
             </div>
             <span className="text-slate-500 text-[11px] font-medium">
-              {new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })} (Horário de Brasília)
+              {getNtpDate().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })} (Hora Legal NTP.br)
             </span>
           </div>
 

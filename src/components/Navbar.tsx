@@ -19,6 +19,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { seedFirestoreDatabase } from '@/lib/firebaseService';
+import { useNtpClock } from '@/lib/ntpService';
 
 interface NavbarProps {
   activeTab: 'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque';
@@ -37,31 +38,9 @@ export function Navbar({
   const [syncing, setSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [brasiliaTime, setBrasiliaTime] = useState<string>('');
 
-  // Relógio oficial no fuso horário de Brasília (GMT-03)
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('pt-BR', {
-        timeZone: 'America/Sao_Paulo',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      const dateStr = now.toLocaleDateString('pt-BR', {
-        timeZone: 'America/Sao_Paulo',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-      setBrasiliaTime(`${dateStr} • ${timeStr}`);
-    };
-
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // Relógio Atômico Oficial sincronizado com NTP.br (NIC.br / Observatório Nacional)
+  const { timeStr, dateStr, isSynced, isSyncing, source, offsetMs, resync: resyncNtp } = useNtpClock();
 
   const handleSyncData = async () => {
     setSyncing(true);
@@ -114,13 +93,25 @@ export function Navbar({
             </div>
           </div>
 
-          {/* Center Info: Horário de Brasília (GMT-03) & Shift Badge */}
+          {/* Center Info: Relógio Atômico Oficial NTP.br (Hora Legal Brasileira) & Shift Badge */}
           <div className="hidden md:flex items-center space-x-2">
-            <div className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 flex items-center space-x-1.5 shadow-2xs">
-              <Clock className="w-3.5 h-3.5 text-blue-600" />
-              <span>{brasiliaTime || 'Horário de Brasília'}</span>
-              <span className="text-[10px] font-bold text-slate-400 bg-white px-1.5 py-0.2 rounded border border-slate-200">GMT-03</span>
-            </div>
+            <button
+              onClick={resyncNtp}
+              title={`Sincronizado com ${source}. Desvio local: ${offsetMs >= 0 ? '+' : ''}${offsetMs}ms. Clique para ressincronizar com o NTP.br.`}
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 flex items-center space-x-2 shadow-2xs transition group"
+            >
+              <div className="flex items-center space-x-1">
+                <span className={`w-2 h-2 rounded-full ${isSynced ? 'bg-emerald-500' : 'bg-amber-500'} ${isSyncing ? 'animate-ping' : ''}`}></span>
+              </div>
+              <span className="font-mono font-bold tracking-tight text-slate-900">{dateStr} • {timeStr}</span>
+              <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200">
+                NTP.br
+              </span>
+              <span className="text-[10px] font-bold text-slate-400 bg-white px-1 py-0.2 rounded border border-slate-200">
+                GMT-03
+              </span>
+            </button>
+
             <div className={`px-3 py-1 rounded-full text-xs font-medium border flex items-center space-x-1.5 ${shiftInfo.color}`}>
               <span>{shiftInfo.label}</span>
             </div>

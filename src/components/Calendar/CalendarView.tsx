@@ -30,14 +30,15 @@ import {
   Sparkles,
   Video
 } from 'lucide-react';
+import { getNtpDate } from '@/lib/ntpService';
 
 interface CalendarViewProps {
   residents: Resident[];
 }
 
 export function CalendarView({ residents }: CalendarViewProps) {
-  // Navigation State (Default to current date: October 6, 2026)
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 9, 6)); // 2026-10-06
+  // Navigation State (Sincronizado com relógio oficial NTP.br)
+  const [currentDate, setCurrentDate] = useState<Date>(getNtpDate());
   const [viewMode, setViewMode] = useState<'semana' | 'dia' | 'mes'>('semana');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -160,7 +161,7 @@ export function CalendarView({ residents }: CalendarViewProps) {
   };
 
   const handleToday = () => {
-    setCurrentDate(new Date(2026, 9, 6)); // Reset to 6 Oct 2026
+    setCurrentDate(getNtpDate());
   };
 
   // Toggle Category Checkbox
@@ -273,7 +274,10 @@ export function CalendarView({ residents }: CalendarViewProps) {
   const dayNamesPt = ['DOM.', 'SEG.', 'TER.', 'QUA.', 'QUI.', 'SEX.', 'SÁB.'];
 
   const isToday = (d: Date) => {
-    return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 6;
+    const today = getNtpDate();
+    return d.getFullYear() === today.getFullYear() && 
+           d.getMonth() === today.getMonth() && 
+           d.getDate() === today.getDate();
   };
 
   return (
