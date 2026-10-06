@@ -100,29 +100,33 @@ export function RegistroRotinaModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-6">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[90vh]">
         
+        {/* Mobile Pull Bar Indicator */}
+        <div className="sm:hidden w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2" />
+
         {/* Header */}
-        <div className="bg-teal-700 px-6 py-4 text-white flex items-center justify-between">
+        <div className="bg-teal-700 px-5 sm:px-6 py-3.5 sm:py-4 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-white/20 rounded-xl">
-              <HeartHandshake className="w-6 h-6 text-white" />
+              <HeartHandshake className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-base">Registro Rápido de Rotina</h3>
-              <p className="text-xs text-teal-100">Checklist do cuidador em quarto (&lt; 1 min)</p>
+              <h3 className="font-bold text-sm sm:text-base">Registro Rápido de Rotina</h3>
+              <p className="text-[11px] sm:text-xs text-teal-100">Checklist do cuidador em quarto (&lt; 1 min)</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-teal-200 hover:text-white p-1 rounded-lg transition"
+            className="text-teal-200 hover:text-white p-1.5 rounded-lg transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-4 sm:p-6 space-y-5 overflow-y-auto overscroll-contain flex-1">
           
           {/* Select Resident */}
           <div className="space-y-1.5">
@@ -371,27 +375,29 @@ export function RegistroRotinaModal({
             />
           </div>
 
-          {/* Footer & Submit */}
-          <div className="pt-2 flex items-center justify-end space-x-3">
+          </div>
+
+          {/* Footer & Submit (Sticky bottom action) */}
+          <div className="p-3.5 sm:p-4 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-between sm:justify-end space-x-3 shrink-0">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 active:bg-slate-200 rounded-xl transition touch-manipulation"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition flex items-center space-x-2"
+              className="px-5 sm:px-6 py-3 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl shadow-md transition flex items-center space-x-2 touch-manipulation active:scale-95"
             >
               {loading ? (
-                <span>Salvando no Firestore...</span>
+                <span>Salvando...</span>
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Gravar Rotina do Residente</span>
+                  <span>Gravar Rotina (&lt; 1 min)</span>
                 </>
               )}
             </button>

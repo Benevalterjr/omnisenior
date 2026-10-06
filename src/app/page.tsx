@@ -147,7 +147,7 @@ export default function HomePage() {
       />
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 w-full flex-1 pb-24 md:pb-12">
         
         {/* TAB 1: Quadro de Plantão (Medicação & Alertas) */}
         {activeTab === 'plantao' && (
@@ -247,8 +247,8 @@ export default function HomePage() {
       {/* Floating Action Button for Mobile Caregivers */}
       <button
         onClick={() => handleOpenQuickRoutine()}
-        className="sm:hidden fixed bottom-6 right-6 bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-full shadow-2xl z-30 flex items-center justify-center transition"
-        title="Registrar Rotina do Residente"
+        className="md:hidden fixed bottom-20 right-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white p-3.5 rounded-full shadow-2xl z-30 flex items-center justify-center transition touch-manipulation ring-4 ring-emerald-600/20"
+        title="Registrar Rotina do Residente (< 1 min)"
       >
         <HeartHandshake className="w-6 h-6" />
       </button>

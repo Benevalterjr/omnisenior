@@ -177,9 +177,12 @@ export function ResidentDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-fade-in">
-      <div className="bg-white rounded-2xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden my-4 max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden max-h-[95vh] sm:max-h-[92vh] flex flex-col">
         
+        {/* Mobile Pull Bar Indicator */}
+        <div className="sm:hidden w-12 h-1.5 bg-slate-500 rounded-full mx-auto my-1.5 shrink-0" />
+
         {/* Header Profile Bar */}
         <div className="bg-slate-900 p-4 sm:p-6 text-white shrink-0">
           <div className="flex items-start justify-between">

@@ -108,42 +108,42 @@ export function DutyBoard({
     <div className="space-y-6">
       
       {/* Overview Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         
         {/* Residents Card */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3.5">
-          <div className="p-3 bg-teal-50 text-teal-600 rounded-xl">
-            <User className="w-6 h-6" />
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-2.5 sm:space-x-3.5">
+          <div className="p-2 sm:p-3 bg-teal-50 text-teal-600 rounded-xl shrink-0">
+            <User className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-800">{residents.length}</div>
-            <div className="text-xs text-slate-500 font-medium">Residentes Cadastrados</div>
+            <div className="text-xl sm:text-2xl font-black text-slate-800">{residents.length}</div>
+            <div className="text-[11px] sm:text-xs text-slate-500 font-medium">Residentes</div>
           </div>
         </div>
 
         {/* Total Meds Card */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3.5">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-            <Pill className="w-6 h-6" />
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-2.5 sm:space-x-3.5">
+          <div className="p-2 sm:p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <Pill className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-800">{stats.totalLogs}</div>
-            <div className="text-xs text-slate-500 font-medium">Doses Aprazadas (Hoje)</div>
+            <div className="text-xl sm:text-2xl font-black text-slate-800">{stats.totalLogs}</div>
+            <div className="text-[11px] sm:text-xs text-slate-500 font-medium">Doses Aprazadas</div>
           </div>
         </div>
 
         {/* Administered Card */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3.5">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-            <CheckCircle2 className="w-6 h-6" />
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-2.5 sm:space-x-3.5">
+          <div className="p-2 sm:p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div className="w-full">
+          <div className="w-full min-w-0">
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-black text-emerald-700">{stats.administered}</span>
-              <span className="text-xs font-bold text-emerald-600">{stats.completionRate}%</span>
+              <span className="text-xl sm:text-2xl font-black text-emerald-700">{stats.administered}</span>
+              <span className="text-[11px] sm:text-xs font-bold text-emerald-600">{stats.completionRate}%</span>
             </div>
-            <div className="text-xs text-slate-500 font-medium">Checados / Administrados</div>
-            <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1.5 overflow-hidden">
+            <div className="text-[11px] sm:text-xs text-slate-500 font-medium truncate">Checados</div>
+            <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1 sm:mt-1.5 overflow-hidden">
               <div 
                 className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" 
                 style={{ width: `${stats.completionRate}%` }}
@@ -153,20 +153,20 @@ export function DutyBoard({
         </div>
 
         {/* Pending Card */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-3.5">
-          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
-            <Clock className="w-6 h-6" />
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-2.5 sm:space-x-3.5">
+          <div className="p-2 sm:p-3 bg-amber-50 text-amber-600 rounded-xl shrink-0">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl font-black text-amber-700">{stats.pending}</span>
+            <div className="flex items-center space-x-1.5">
+              <span className="text-xl sm:text-2xl font-black text-amber-700">{stats.pending}</span>
               {stats.refused > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 font-bold">
-                  {stats.refused} recusa{stats.refused > 1 ? 's' : ''}
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 font-bold">
+                  {stats.refused} rec.
                 </span>
               )}
             </div>
-            <div className="text-xs text-slate-500 font-medium">Pendentes no Plantão</div>
+            <div className="text-[11px] sm:text-xs text-slate-500 font-medium">Pendentes</div>
           </div>
         </div>
       </div>
@@ -379,21 +379,21 @@ export function DutyBoard({
                           </div>
 
                           {/* Quick Action Buttons */}
-                          <div className="flex items-center space-x-1.5">
+                          <div className="flex items-center space-x-1.5 shrink-0">
                             {log.status === 'scheduled' ? (
                               <>
                                 <button
                                   onClick={() => handleQuickCheck(resident, log)}
-                                  title="Checar administração com 1 clique"
-                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center space-x-1 shadow-xs transition"
+                                  title="Checar administração com 1 toque"
+                                  className="min-h-[42px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold flex items-center space-x-1.5 shadow-sm transition touch-manipulation active:scale-95 shrink-0"
                                 >
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">Checar</span>
+                                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                  <span>Checar</span>
                                 </button>
                                 <button
                                   onClick={() => setSelectedCheck({ resident, log })}
                                   title="Opções de registro (Recusar, Adiar ou Anotar)"
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                                  className="min-h-[42px] min-w-[42px] p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 bg-slate-50 border border-slate-200 transition touch-manipulation active:scale-95 flex items-center justify-center shrink-0"
                                 >
                                   <Clock className="w-4 h-4" />
                                 </button>
@@ -402,7 +402,7 @@ export function DutyBoard({
                               <button
                                 onClick={() => setSelectedCheck({ resident, log })}
                                 title="Ver / Alterar registro de checagem"
-                                className="px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                                className="min-h-[38px] px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl border border-slate-200 transition touch-manipulation active:scale-95 shrink-0"
                               >
                                 Detalhes
                               </button>

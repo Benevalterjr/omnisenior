@@ -54,30 +54,34 @@ export function CheckMedicationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[92vh] sm:max-h-[90vh]">
         
+        {/* Mobile Pull Bar Indicator */}
+        <div className="sm:hidden w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2 shrink-0" />
+
         {/* Header */}
-        <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between">
+        <div className="bg-slate-900 px-5 sm:px-6 py-3.5 sm:py-4 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-teal-500/20 text-teal-300 rounded-lg">
               <Pill className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-base leading-tight">Checagem de Medicamento</h3>
-              <p className="text-xs text-slate-400">Registro de Aprazamento & Baixa</p>
+              <h3 className="font-semibold text-sm sm:text-base leading-tight">Checagem de Medicamento</h3>
+              <p className="text-[11px] sm:text-xs text-slate-400">Registro de Aprazamento & Baixa</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+            className="text-slate-400 hover:text-white p-1.5 rounded-lg transition"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-4 sm:p-6 space-y-4 overflow-y-auto overscroll-contain flex-1">
           
           {/* Resident Details Box */}
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex items-center justify-between">
@@ -195,23 +199,25 @@ export function CheckMedicationModal({
             </span>
           </div>
 
-          {/* Footer Buttons */}
-          <div className="flex items-center justify-end space-x-3 pt-2">
+          </div>
+
+          {/* Footer Buttons (Sticky bottom action) */}
+          <div className="p-3.5 sm:p-4 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-between sm:justify-end space-x-3 shrink-0">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
+              className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 active:bg-slate-200 rounded-xl transition touch-manipulation"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl shadow-md transition disabled:opacity-50 flex items-center space-x-1.5"
+              className="px-5 py-2.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 active:bg-teal-800 rounded-xl shadow-md transition disabled:opacity-50 flex items-center space-x-1.5 touch-manipulation active:scale-95"
             >
               {loading ? (
-                <span>Salvando no Firestore...</span>
+                <span>Salvando...</span>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />

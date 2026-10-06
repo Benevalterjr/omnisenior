@@ -178,7 +178,7 @@ export function ResidentesListView({
               <div className="mt-5 pt-3 border-t border-slate-100 grid grid-cols-3 gap-1.5">
                 <button
                   onClick={() => onOpenQuickRoutine(resident.id)}
-                  className="bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 text-xs font-semibold py-2 px-1.5 rounded-xl transition flex items-center justify-center space-x-1"
+                  className="bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-800 text-xs font-semibold py-2.5 px-1.5 rounded-xl transition flex items-center justify-center space-x-1 touch-manipulation active:scale-95"
                   title="Registrar rotina em menos de 1 minuto"
                 >
                   <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
@@ -187,7 +187,7 @@ export function ResidentesListView({
 
                 <button
                   onClick={() => onOpenScalesModal ? onOpenScalesModal(resident) : onOpenResidentModal(resident)}
-                  className="bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 text-xs font-semibold py-2 px-1.5 rounded-xl transition flex items-center justify-center space-x-1"
+                  className="bg-slate-100 hover:bg-amber-50 text-slate-700 hover:text-amber-800 text-xs font-semibold py-2.5 px-1.5 rounded-xl transition flex items-center justify-center space-x-1 touch-manipulation active:scale-95"
                   title="Escalas Geriátricas Automatizadas (Braden, Morse, Katz)"
                 >
                   <ShieldAlert className="w-3.5 h-3.5 text-amber-600 shrink-0" />
@@ -196,7 +196,7 @@ export function ResidentesListView({
 
                 <button
                   onClick={() => onOpenResidentModal(resident)}
-                  className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-1.5 rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs"
+                  className="bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-bold py-2.5 px-1.5 rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs touch-manipulation active:scale-95"
                   title="Abrir prontuário completo"
                 >
                   <Eye className="w-3.5 h-3.5 shrink-0" />
