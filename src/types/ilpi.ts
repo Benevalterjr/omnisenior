@@ -1,13 +1,68 @@
-export type UserRole = 'admin' | 'medico' | 'enfermeiro' | 'cuidador' | 'familiar';
+export type UserRole = 
+  | 'admin' 
+  | 'medico' 
+  | 'enfermeiro' 
+  | 'cuidador' 
+  | 'fisioterapeuta' 
+  | 'nutricionista' 
+  | 'psicologo' 
+  | 'familiar';
+
+export interface UserPermissions {
+  canPrescribe: boolean;              // Prescrever medicamentos
+  canTranscribe: boolean;             // Transcrever receitas externas
+  canAdministerMedication: boolean;   // Baixa/checagem no quadro de plantão
+  canLogRoutine: boolean;             // Registrar rotina rápida (<1 min)
+  canApplyScales: boolean;            // Aplicar escalas Braden, Morse, Katz
+  canViewConfidential: boolean;       // Ver prontuário sigiloso
+  canManageInventory: boolean;        // Movimentar e cadastrar estoque
+  canManageResidents: boolean;        // Cadastrar e editar residentes
+  canManageUsers: boolean;            // Adicionar e gerenciar equipe
+  canManageSettings: boolean;         // Alterar dados da clínica e leitos
+}
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
   role: UserRole;
-  registry?: string; // COREN, CRM, etc.
+  registry?: string; // COREN, CRM, CREFITO, CRN, CRP, etc.
   phone?: string;
+  specialty?: string;
+  shiftPreference?: 'manha' | 'tarde' | 'noite' | 'comercial' | 'escala_12x36';
+  status?: 'active' | 'inactive';
+  customPermissions?: Partial<UserPermissions>;
+  photoUrl?: string;
   createdAt?: any;
+}
+
+export interface ClinicRoomBed {
+  id: string;
+  roomNumber: string;
+  bedLetter: string; // 'A', 'B', 'C'
+  type: 'individual' | 'duplo' | 'triplo';
+  residentId?: string;
+  residentName?: string;
+  status: 'ocupado' | 'disponivel' | 'manutencao';
+  dailyRate?: number;
+}
+
+export interface ClinicSettings {
+  name: string;
+  tradingName: string;
+  cnpj: string;
+  sanitaryLicense: string;
+  technicalDirectorMedical: string;
+  technicalDirectorNursing: string;
+  phone: string;
+  email: string;
+  address: string;
+  totalBedsCapacity: number;
+  shiftHours: {
+    manha: string;
+    tarde: string;
+    noite: string;
+  };
 }
 
 export interface EmergencyContact {

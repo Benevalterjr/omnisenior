@@ -16,14 +16,15 @@ import {
   PlusCircle,
   Menu,
   X,
-  Calendar
+  Calendar,
+  ShieldCheck
 } from 'lucide-react';
 import { seedFirestoreDatabase } from '@/lib/firebaseService';
 import { useNtpClock } from '@/lib/ntpService';
 
 interface NavbarProps {
-  activeTab: 'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque';
-  setActiveTab: (tab: 'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque') => void;
+  activeTab: 'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque' | 'admin';
+  setActiveTab: (tab: 'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque' | 'admin') => void;
   onOpenNewResident: () => void;
   onOpenQuickRoutine: () => void;
 }
@@ -34,7 +35,7 @@ export function Navbar({
   onOpenNewResident, 
   onOpenQuickRoutine 
 }: NavbarProps) {
-  const { currentUser, role, switchUser, switchRole, shift, availableUsers, canManageResidents } = useAuth();
+  const { currentUser, role, switchUser, switchRole, shift, availableUsers, canManageResidents, canAccessAdmin } = useAuth();
   const [syncing, setSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -232,6 +233,19 @@ export function Navbar({
               <Package className="w-4 h-4" />
               <span>Estoque Individual</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('admin')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
+                activeTab === 'admin'
+                  ? 'bg-purple-700 text-white shadow-sm'
+                  : 'text-purple-700 hover:text-purple-900 hover:bg-purple-100/70 bg-purple-50/70 border border-purple-200'
+              }`}
+              title="Área do Diretor: Equipe, Permissões RBAC, Leitos e Instituição"
+            >
+              <ShieldCheck className={`w-4 h-4 ${activeTab === 'admin' ? 'text-white' : 'text-purple-600'}`} />
+              <span>Diretoria & Acessos</span>
+            </button>
           </nav>
 
           {/* Quick Action Buttons */}
@@ -285,6 +299,14 @@ export function Navbar({
                 <span>Cadastrar Novo Residente</span>
               </button>
             )}
+
+            <button
+              onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }}
+              className="w-full bg-purple-700 text-white py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-2"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Diretoria & Acessos</span>
+            </button>
           </div>
         </div>
       )}

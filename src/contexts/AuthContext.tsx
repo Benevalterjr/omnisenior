@@ -1,16 +1,24 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { UserProfile, UserRole, ShiftType } from '@/types/ilpi';
+import { UserProfile, UserRole, ShiftType, UserPermissions } from '@/types/ilpi';
 import { INITIAL_USERS } from '@/lib/mockData';
+import { getUserPermissions, DEFAULT_ROLE_PERMISSIONS } from '@/lib/permissionsService';
 
 interface AuthContextType {
   currentUser: UserProfile;
   role: UserRole;
   shift: ShiftType;
   availableUsers: UserProfile[];
+  users: UserProfile[];
+  permissions: UserPermissions;
   switchUser: (userId: string) => void;
   switchRole: (role: UserRole) => void;
+  addUser: (userData: Omit<UserProfile, 'id'>) => UserProfile;
+  updateUser: (userId: string, updates: Partial<UserProfile>) => void;
+  toggleUserStatus: (userId: string) => void;
+  deleteUser: (userId: string) => void;
+  canAccessAdmin: boolean;
   canManagePrescriptions: boolean;
   canCheckMedications: boolean;
   canManageResidents: boolean;
@@ -21,8 +29,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Default to Enfermeiro for best overview, but easily switchable to Cuidador, Médico, etc.
-  const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USERS[2] as UserProfile);
+  const [users, setUsers] = useState<UserProfile[]>(INITIAL_USERS as UserProfile[]);
+  // Default to Diretora Camila (admin) or Enfermeiro Juliana
+  const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USERS[0] as UserProfile);
   const [shift, setShift] = useState<ShiftType>('manha');
 
   // Determine current shift based on local hour
@@ -38,27 +47,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const switchUser = (userId: string) => {
-    const user = INITIAL_USERS.find(u => u.id === userId);
+    const user = users.find(u => u.id === userId);
     if (user) {
-      setCurrentUser(user as UserProfile);
+      setCurrentUser(user);
     }
   };
 
   const switchRole = (role: UserRole) => {
-    const matchingUser = INITIAL_USERS.find(u => u.role === role);
+    const matchingUser = users.find(u => u.role === role);
     if (matchingUser) {
-      setCurrentUser(matchingUser as UserProfile);
+      setCurrentUser(matchingUser);
     } else {
       setCurrentUser(prev => ({ ...prev, role }));
     }
   };
 
-  // Permission helpers aligned with firestore.rules
+  const addUser = (userData: Omit<UserProfile, 'id'>): UserProfile => {
+    const newId = `user-${Date.now().toString(36)}`;
+    const createdUser: UserProfile = {
+      ...userData,
+      id: newId,
+      status: userData.status || 'active',
+      createdAt: new Date().toISOString()
+    };
+    setUsers(prev => [createdUser, ...prev]);
+    return createdUser;
+  };
+
+  const updateUser = (userId: string, updates: Partial<UserProfile>) => {
+    setUsers(prev => prev.map(u => {
+      if (u.id === userId) {
+        const updated = { ...u, ...updates };
+        if (currentUser.id === userId) {
+          setCurrentUser(updated);
+        }
+        return updated;
+      }
+      return u;
+    }));
+  };
+
+  const toggleUserStatus = (userId: string) => {
+    setUsers(prev => prev.map(u => {
+      if (u.id === userId) {
+        const nextStatus = u.status === 'active' ? 'inactive' : 'active';
+        const updated: UserProfile = { ...u, status: nextStatus };
+        if (currentUser.id === userId) {
+          setCurrentUser(updated);
+        }
+        return updated;
+      }
+      return u;
+    }));
+  };
+
+  const deleteUser = (userId: string) => {
+    setUsers(prev => prev.filter(u => u.id !== userId));
+    if (currentUser.id === userId) {
+      // Switch back to admin
+      const fallback = users.find(u => u.role === 'admin') || users[0];
+      if (fallback) setCurrentUser(fallback);
+    }
+  };
+
+  // Granular permissions calculation
+  const permissions = getUserPermissions(currentUser);
   const role = currentUser.role;
-  const canManagePrescriptions = ['admin', 'medico', 'enfermeiro'].includes(role);
-  const canCheckMedications = ['admin', 'medico', 'enfermeiro', 'cuidador'].includes(role);
-  const canManageResidents = ['admin', 'enfermeiro', 'medico'].includes(role);
-  const canEditInventory = ['admin', 'enfermeiro', 'cuidador'].includes(role);
+
+  const canAccessAdmin = role === 'admin';
+  const canManagePrescriptions = permissions.canPrescribe || ['admin', 'medico', 'enfermeiro'].includes(role);
+  const canCheckMedications = permissions.canAdministerMedication || ['admin', 'medico', 'enfermeiro', 'cuidador'].includes(role);
+  const canManageResidents = permissions.canManageResidents || ['admin', 'enfermeiro', 'medico'].includes(role);
+  const canEditInventory = permissions.canManageInventory || ['admin', 'enfermeiro', 'cuidador'].includes(role);
   const canViewAll = true;
 
   return (
@@ -67,9 +127,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         role,
         shift,
-        availableUsers: INITIAL_USERS as UserProfile[],
+        availableUsers: users,
+        users,
+        permissions,
         switchUser,
         switchRole,
+        addUser,
+        updateUser,
+        toggleUserStatus,
+        deleteUser,
+        canAccessAdmin,
         canManagePrescriptions,
         canCheckMedications,
         canManageResidents,

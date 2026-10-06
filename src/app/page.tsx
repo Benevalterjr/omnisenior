@@ -23,13 +23,14 @@ import { NovoResidenteModal } from '@/components/NovoResidenteModal';
 import { CheckMedicationModal } from '@/components/CheckMedicationModal';
 import { EscalasGeriatricasModal } from '@/components/EscalasGeriatricasModal';
 import { CalendarView } from '@/components/Calendar/CalendarView';
+import { AdminDashboardView } from '@/components/Admin/AdminDashboardView';
 import { HeartHandshake } from 'lucide-react';
 
 export default function HomePage() {
   const { currentUser } = useAuth();
   
   // Navigation
-  const [activeTab, setActiveTab] = useState<'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque'>('plantao');
+  const [activeTab, setActiveTab] = useState<'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque' | 'admin'>('plantao');
 
   // Main State
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -209,9 +210,14 @@ export default function HomePage() {
           />
         )}
 
-        {/* TAB 4: Estoque Individual */}
+        {/* TAB 5: Estoque Individual */}
         {activeTab === 'estoque' && (
           <EstoqueView residents={residents} />
+        )}
+
+        {/* TAB 6: Diretoria & Acessos (Administração ILPI & RBAC) */}
+        {activeTab === 'admin' && (
+          <AdminDashboardView />
         )}
       </main>
 

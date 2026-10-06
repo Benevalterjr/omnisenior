@@ -1,4 +1,4 @@
-import { Resident, Prescription, MedicationLog, Evolution, IndividualInventoryItem, GeriatricAssessment } from '@/types/ilpi';
+import { Resident, Prescription, MedicationLog, Evolution, IndividualInventoryItem, GeriatricAssessment, UserProfile } from '@/types/ilpi';
 import { calculateBraden, calculateMorse, calculateKatz } from './geriatricScales';
 
 export const INITIAL_RESIDENTS: Resident[] = [
@@ -572,41 +572,113 @@ export const INITIAL_INVENTORY: Record<string, IndividualInventoryItem[]> = {
   ]
 };
 
-export const INITIAL_USERS = [
+export const INITIAL_USERS: UserProfile[] = [
   {
     id: 'user-admin',
     name: 'Dra. Camila Nogueira',
     email: 'diretoria@omnisenior.com.br',
     role: 'admin',
-    registry: 'CRM/SP 198273'
+    registry: 'CRM/SP 198273',
+    phone: '(11) 98123-0001',
+    specialty: 'Diretoria Geral & Geriatria',
+    shiftPreference: 'comercial',
+    status: 'active',
+    photoUrl: 'https://images.unsplash.com/photo-1594824813576-963d865b1d9c?auto=format&fit=crop&q=80&w=250'
   },
   {
     id: 'user-med',
     name: 'Dr. Roberto Mendes',
     email: 'medico@omnisenior.com.br',
     role: 'medico',
-    registry: 'CRM/SP 123456'
+    registry: 'CRM/SP 123456',
+    phone: '(11) 98123-0002',
+    specialty: 'Clínica Médica e Prescritor',
+    shiftPreference: 'manha',
+    status: 'active',
+    photoUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=250'
   },
   {
     id: 'user-enf',
     name: 'Enf. Juliana Ramos',
     email: 'enfermagem@omnisenior.com.br',
     role: 'enfermeiro',
-    registry: 'COREN/SP 456789'
+    registry: 'COREN/SP 456789',
+    phone: '(11) 98123-0003',
+    specialty: 'Responsável Técnica (RT) de Enfermagem',
+    shiftPreference: 'manha',
+    status: 'active',
+    photoUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=250'
+  },
+  {
+    id: 'user-enf-2',
+    name: 'Enf. Marcos Vinícius',
+    email: 'marcos.enfermagem@omnisenior.com.br',
+    role: 'enfermeiro',
+    registry: 'COREN/SP 389102',
+    phone: '(11) 98123-0004',
+    specialty: 'Enfermeiro Assistencial e Transcritor',
+    shiftPreference: 'noite',
+    status: 'active',
+    photoUrl: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=250'
   },
   {
     id: 'user-cuid',
     name: 'Maria Silva',
     email: 'cuidador@omnisenior.com.br',
     role: 'cuidador',
-    registry: 'Cert. Cuidador ILPI #892'
+    registry: 'Cert. Cuidador ILPI #892',
+    phone: '(11) 98123-0005',
+    specialty: 'Cuidado Geriátrico - Plantão Diurno',
+    shiftPreference: 'manha',
+    status: 'active',
+    photoUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=250'
+  },
+  {
+    id: 'user-cuid-2',
+    name: 'Lucas Andrade',
+    email: 'lucas.cuidador@omnisenior.com.br',
+    role: 'cuidador',
+    registry: 'Cert. Cuidador ILPI #1044',
+    phone: '(11) 98123-0006',
+    specialty: 'Cuidado Geriátrico - Plantão Noturno',
+    shiftPreference: 'noite',
+    status: 'active',
+    photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=250'
+  },
+  {
+    id: 'user-fisio',
+    name: 'Dra. Patrícia Lima',
+    email: 'fisioterapia@omnisenior.com.br',
+    role: 'fisioterapeuta',
+    registry: 'CREFITO-3/98124-F',
+    phone: '(11) 98123-0007',
+    specialty: 'Reabilitação Motora e Respiratória',
+    shiftPreference: 'tarde',
+    status: 'active',
+    photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=250'
+  },
+  {
+    id: 'user-nutri',
+    name: 'Fernanda Castilho',
+    email: 'nutricao@omnisenior.com.br',
+    role: 'nutricionista',
+    registry: 'CRN-3/54321',
+    phone: '(11) 98123-0008',
+    specialty: 'Nutrição Clínica & Terapia Enteral',
+    shiftPreference: 'comercial',
+    status: 'active',
+    photoUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=250'
   },
   {
     id: 'user-fam',
     name: 'Carlos Albuquerque',
     email: 'familiar@omnisenior.com.br',
     role: 'familiar',
-    registry: 'Responsável legal res-1'
+    registry: 'Responsável legal res-1',
+    phone: '(11) 98765-4321',
+    specialty: 'Familiar Responsável',
+    shiftPreference: 'comercial',
+    status: 'active'
   }
 ];
 
