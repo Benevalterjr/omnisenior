@@ -98,11 +98,16 @@ export function formatNtpTime(date?: Date): {
  * React Hook for live atomic clock synchronized with NTP.br
  */
 export function useNtpClock() {
+  const [mounted, setMounted] = useState<boolean>(false);
   const [ntpTime, setNtpTime] = useState<Date>(getNtpDate());
   const [isSynced, setIsSynced] = useState<boolean>(isNtpInitialized);
   const [source, setSource] = useState<string>(lastNtpSource);
   const [offsetMs, setOffsetMs] = useState<number>(globalNtpOffsetMs);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const resync = useCallback(async () => {
     setIsSyncing(true);
@@ -136,9 +141,10 @@ export function useNtpClock() {
 
   return {
     ntpTime,
-    timeStr: formatted.timeStr,
-    dateStr: formatted.dateStr,
-    fullPtBr: formatted.fullPtBr,
+    timeStr: mounted ? formatted.timeStr : '--:--:--',
+    dateStr: mounted ? formatted.dateStr : '--/--/----',
+    fullPtBr: mounted ? formatted.fullPtBr : 'Sincronizando com NTP.br...',
+    isMounted: mounted,
     isSynced,
     isSyncing,
     source,

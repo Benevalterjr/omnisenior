@@ -40,7 +40,7 @@ export function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Relógio Atômico Oficial sincronizado com NTP.br (NIC.br / Observatório Nacional)
-  const { timeStr, dateStr, isSynced, isSyncing, source, offsetMs, resync: resyncNtp } = useNtpClock();
+  const { timeStr, dateStr, isMounted, isSynced, isSyncing, source, offsetMs, resync: resyncNtp } = useNtpClock();
 
   const handleSyncData = async () => {
     setSyncing(true);
@@ -97,13 +97,16 @@ export function Navbar({
           <div className="hidden md:flex items-center space-x-2">
             <button
               onClick={resyncNtp}
+              suppressHydrationWarning
               title={`Sincronizado com ${source}. Desvio local: ${offsetMs >= 0 ? '+' : ''}${offsetMs}ms. Clique para ressincronizar com o NTP.br.`}
               className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 flex items-center space-x-2 shadow-2xs transition group"
             >
               <div className="flex items-center space-x-1">
                 <span className={`w-2 h-2 rounded-full ${isSynced ? 'bg-emerald-500' : 'bg-amber-500'} ${isSyncing ? 'animate-ping' : ''}`}></span>
               </div>
-              <span className="font-mono font-bold tracking-tight text-slate-900">{dateStr} • {timeStr}</span>
+              <span suppressHydrationWarning className="font-mono font-bold tracking-tight text-slate-900">
+                {isMounted ? `${dateStr} • ${timeStr}` : '--/--/---- • --:--:--'}
+              </span>
               <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200">
                 NTP.br
               </span>

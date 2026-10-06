@@ -190,7 +190,7 @@ export function CheckMedicationModal({
               <User className="w-4 h-4 text-slate-400" />
               <span>Assinatura Digital: <strong className="text-slate-800">{currentUser.name}</strong> ({currentUser.role.toUpperCase()})</span>
             </div>
-            <span className="text-slate-500 text-[11px] font-medium">
+            <span suppressHydrationWarning className="text-slate-500 text-[11px] font-medium">
               {getNtpDate().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })} (Hora Legal NTP.br)
             </span>
           </div>
