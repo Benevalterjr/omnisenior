@@ -536,115 +536,135 @@ export function CalendarView({ residents }: CalendarViewProps) {
           {/* SEMANA VIEW */}
           {viewMode === 'semana' && (
             <div className="flex-1 flex flex-col overflow-y-auto overflow-x-auto">
-              <div className="min-w-[720px] md:min-w-full flex flex-col flex-1">
+              <div className="min-w-[700px] md:min-w-full flex flex-col flex-1">
                 
-                {/* 1. Header row with Days of the week */}
-                <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-200 sticky top-0 bg-white z-20">
-                  {/* Timezone label (Padrão Brasília GMT-03) */}
-                  <div className="p-2 text-[10px] text-slate-500 font-bold border-r border-slate-200 flex flex-col items-center justify-end text-center leading-tight">
-                    <span className="text-[9px] text-slate-400">BRT</span>
-                    <span>GMT-03</span>
+                {/* STICKY TOP: Header row + Dia Inteiro row */}
+                <div className="sticky top-0 bg-white z-20 shadow-xs border-b border-slate-200">
+                  
+                  {/* 1. Header row with Days of the week */}
+                  <div 
+                    className="grid border-b border-slate-100"
+                    style={{ gridTemplateColumns: '56px repeat(7, minmax(0, 1fr))' }}
+                  >
+                    {/* Timezone label (Padrão Brasília GMT-03) */}
+                    <div className="p-2 text-[10px] text-slate-500 font-bold border-r border-slate-200 flex flex-col items-center justify-end text-center leading-tight select-none">
+                      <span className="text-[9px] text-slate-400">BRT</span>
+                      <span>GMT-03</span>
+                    </div>
+
+                    {/* 7 Days Columns */}
+                    {weekDays.map((dayDate, idx) => {
+                      const isTodayCol = isToday(dayDate);
+                      const isSelectedCol = dayDate.getDate() === currentDate.getDate();
+                      const dayMonthStr = `${dayDate.getDate().toString().padStart(2, '0')}/${(dayDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="py-2.5 text-center border-r border-slate-200 last:border-r-0 min-w-0 overflow-hidden"
+                        >
+                          <div className={`text-[11px] font-bold uppercase tracking-wider ${
+                            isTodayCol ? 'text-blue-600' : 'text-slate-500'
+                          }`}>
+                            {dayNamesPt[dayDate.getDay()]}
+                          </div>
+                          <div className="mt-1 flex justify-center">
+                            <button
+                              onClick={() => setCurrentDate(dayDate)}
+                              className={`w-9 h-9 rounded-full flex items-center justify-center text-base font-normal transition ${
+                                isTodayCol
+                                  ? 'bg-blue-600 text-white font-bold shadow-xs'
+                                  : isSelectedCol
+                                  ? 'bg-slate-100 text-slate-800 font-semibold'
+                                  : 'text-slate-700 hover:bg-slate-100'
+                              }`}
+                            >
+                              {dayDate.getDate()}
+                            </button>
+                          </div>
+                          <div className={`text-[10px] font-medium mt-0.5 ${
+                            isTodayCol ? 'text-blue-600 font-bold' : 'text-slate-400'
+                          }`}>
+                            {dayMonthStr}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
-                  {/* 7 Days Columns */}
-                  {weekDays.map((dayDate, idx) => {
-                    const isTodayCol = isToday(dayDate);
-                    const isSelectedCol = dayDate.getDate() === currentDate.getDate();
-                    const dayMonthStr = `${dayDate.getDate().toString().padStart(2, '0')}/${(dayDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                  {/* 2. All-Day / Dia Inteiro Row (Exact Google Calendar Banner Row) */}
+                  <div 
+                    className="grid bg-slate-50/50 min-h-[36px]"
+                    style={{ gridTemplateColumns: '56px repeat(7, minmax(0, 1fr))' }}
+                  >
+                    <div className="text-[10px] font-semibold text-slate-400 text-right pr-2 py-1.5 border-r border-slate-200 flex items-center justify-end select-none">
+                      <span className="text-[9px] uppercase tracking-wider text-slate-400">Dia todo</span>
+                    </div>
 
-                    return (
-                      <div
-                        key={idx}
-                        className="py-2.5 text-center border-r border-slate-200 last:border-r-0"
-                      >
-                        <div className={`text-[11px] font-bold uppercase tracking-wider ${
-                          isTodayCol ? 'text-blue-600' : 'text-slate-500'
-                        }`}>
-                          {dayNamesPt[dayDate.getDay()]}
+                    {weekDays.map((dayDate, dayIdx) => {
+                      const dateStr = toDateString(dayDate);
+                      const allDayEvents = filteredEvents.filter(e => e.date === dateStr && (e.isAllDay || e.startTime === '00:00' && e.endTime === '23:59'));
+
+                      return (
+                        <div
+                          key={dayIdx}
+                          onClick={() => handleAllDayCellClick(dateStr)}
+                          className="border-r border-slate-200 last:border-r-0 hover:bg-blue-50/20 transition cursor-pointer px-1 py-1 min-w-0 overflow-hidden flex flex-col justify-center min-h-[36px]"
+                          title="Clique para adicionar evento de dia inteiro"
+                        >
+                          {allDayEvents.map(evt => {
+                            const catConfig = CALENDAR_CATEGORIES.find(c => c.id === evt.category);
+                            const pillColor = evt.color || catConfig?.color || '#0b8043';
+
+                            return (
+                              <div
+                                key={evt.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedEvent(evt);
+                                }}
+                                className="w-full rounded px-2 py-0.5 text-white text-[11px] font-medium shadow-xs cursor-pointer truncate transition hover:brightness-105 active:scale-[0.99] flex items-center space-x-1 min-w-0 overflow-hidden h-[22px] mb-0.5 last:mb-0"
+                                style={{ backgroundColor: pillColor }}
+                                title={evt.title}
+                              >
+                                <span className="truncate whitespace-nowrap min-w-0 block">{evt.title}</span>
+                              </div>
+                            );
+                          })}
                         </div>
-                        <div className="mt-1 flex justify-center">
-                          <button
-                            onClick={() => setCurrentDate(dayDate)}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-normal transition ${
-                              isTodayCol
-                                ? 'bg-blue-600 text-white font-bold shadow-xs'
-                                : isSelectedCol
-                                ? 'bg-slate-100 text-slate-800 font-semibold'
-                                : 'text-slate-700 hover:bg-slate-100'
-                            }`}
-                          >
-                            {dayDate.getDate()}
-                          </button>
-                        </div>
-                        <div className={`text-[10px] font-medium mt-0.5 ${
-                          isTodayCol ? 'text-blue-600 font-bold' : 'text-slate-400'
-                        }`}>
-                          {dayMonthStr}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+
                 </div>
 
-                {/* 2. All-Day / Dia Inteiro Row (Exact Google Calendar Banner Row) */}
-                <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-200 bg-slate-50/40 min-h-[44px] sticky top-[82px] bg-white z-10 shadow-2xs">
-                  <div className="text-[10px] font-semibold text-slate-400 text-right pr-2 py-2 border-r border-slate-200 flex items-center justify-end select-none">
-                    <span className="text-[9px] uppercase tracking-wider text-slate-400">Dia todo</span>
+                {/* 3. 24 Hours Grid (Column-Based for perfectly unified vertical lines and slots) */}
+                <div 
+                  className="grid flex-1"
+                  style={{ gridTemplateColumns: '56px repeat(7, minmax(0, 1fr))' }}
+                >
+                  {/* Left Hour Labels Column */}
+                  <div className="border-r border-slate-200 divide-y divide-slate-100 select-none bg-white">
+                    {hours.map((hour) => (
+                      <div 
+                        key={hour} 
+                        className="h-12 text-[10px] font-semibold text-slate-400 text-right pr-2 pt-1"
+                      >
+                        {formatHourLabel(hour)}
+                      </div>
+                    ))}
                   </div>
 
+                  {/* 7 Day Columns */}
                   {weekDays.map((dayDate, dayIdx) => {
                     const dateStr = toDateString(dayDate);
-                    const allDayEvents = filteredEvents.filter(e => e.date === dateStr && (e.isAllDay || e.startTime === '00:00' && e.endTime === '23:59'));
 
                     return (
                       <div
                         key={dayIdx}
-                        onClick={() => handleAllDayCellClick(dateStr)}
-                        className="border-r border-slate-200 last:border-r-0 hover:bg-blue-50/20 transition cursor-pointer p-1 flex flex-col justify-center min-h-[44px]"
-                        title="Clique para adicionar evento de dia inteiro"
+                        className="border-r border-slate-200 last:border-r-0 min-w-0 overflow-hidden divide-y divide-slate-100 relative bg-white"
                       >
-                        {allDayEvents.map(evt => {
-                          const catConfig = CALENDAR_CATEGORIES.find(c => c.id === evt.category);
-                          const pillColor = evt.color || catConfig?.color || '#0b8043';
-
-                          return (
-                            <div
-                              key={evt.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedEvent(evt);
-                              }}
-                              className="w-full rounded-md px-2.5 py-1 text-white text-[11px] font-bold shadow-xs truncate cursor-pointer transition hover:brightness-105 active:scale-[0.99] flex items-center space-x-1 mb-0.5 last:mb-0"
-                              style={{ backgroundColor: pillColor }}
-                              title={evt.title}
-                            >
-                              <span className="truncate">{evt.title}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* 3. 24 Hours Grid */}
-                <div className="flex-1 divide-y divide-slate-100">
-                  {hours.map((hour) => {
-                    return (
-                      <div
-                        key={hour}
-                        className="grid grid-cols-[60px_repeat(7,1fr)] min-h-[52px] relative group"
-                      >
-                        {/* Left Hour Label */}
-                        <div className="text-[10px] font-semibold text-slate-400 text-right pr-2 pt-1.5 border-r border-slate-200 select-none">
-                          {formatHourLabel(hour)}
-                        </div>
-
-                        {/* 7 Day Slots for this Hour */}
-                        {weekDays.map((dayDate, dayIdx) => {
-                          const dateStr = toDateString(dayDate);
-
-                          // Find events scheduled in this day & hour (excluding all-day events)
+                        {hours.map((hour) => {
                           const slotEvents = filteredEvents.filter(e => {
                             if (e.date !== dateStr) return false;
                             if (e.isAllDay) return false;
@@ -654,11 +674,10 @@ export function CalendarView({ residents }: CalendarViewProps) {
 
                           return (
                             <div
-                              key={dayIdx}
+                              key={hour}
                               onClick={() => handleCellClick(dateStr, hour)}
-                              className="border-r border-slate-100 last:border-r-0 hover:bg-blue-50/20 transition cursor-pointer relative p-1 flex flex-col justify-start"
+                              className="h-12 hover:bg-blue-50/20 transition cursor-pointer p-0.5 min-w-0 overflow-hidden relative flex flex-col justify-start"
                             >
-                              {/* Render Event Pills - full width of the field, just like Google Calendar */}
                               {slotEvents.map(evt => {
                                 const catConfig = CALENDAR_CATEGORIES.find(c => c.id === evt.category);
                                 const pillColor = evt.color || catConfig?.color || '#0284c7';
@@ -670,19 +689,12 @@ export function CalendarView({ residents }: CalendarViewProps) {
                                       e.stopPropagation();
                                       setSelectedEvent(evt);
                                     }}
-                                    className="w-full rounded-md px-2 py-1 mb-1 text-white shadow-xs cursor-pointer transition hover:brightness-105 active:scale-[0.99] overflow-hidden"
+                                    className="w-full rounded px-1.5 py-0.5 text-white text-[11px] font-medium shadow-xs cursor-pointer transition hover:brightness-105 active:scale-[0.99] flex items-center space-x-1 min-w-0 overflow-hidden mb-0.5 last:mb-0 h-[22px]"
                                     style={{ backgroundColor: pillColor }}
                                     title={`${evt.startTime} - ${evt.endTime}: ${evt.title}`}
                                   >
-                                    <div className="flex items-center space-x-1.5 min-w-0">
-                                      <span className="text-[10px] font-bold shrink-0 opacity-95">{evt.startTime}</span>
-                                      <span className="text-[11px] font-semibold truncate leading-tight">{evt.title}</span>
-                                    </div>
-                                    {evt.residentName && (
-                                      <div className="text-[9px] opacity-90 truncate leading-tight mt-0.5 font-normal">
-                                        {evt.residentName}
-                                      </div>
-                                    )}
+                                    <span className="font-bold text-[10px] shrink-0 opacity-90">{evt.startTime}</span>
+                                    <span className="truncate whitespace-nowrap min-w-0 block">{evt.title}</span>
                                   </div>
                                 );
                               })}
