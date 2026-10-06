@@ -114,7 +114,7 @@ export function ResidentDetailModal({
           role: currentUser.role,
           registry: currentUser.registry
         },
-        date: `Hoje às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
+        date: `${new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })} às ${new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}`,
         type: newEvoType,
         text: newEvoText.trim(),
         vitalSigns: Object.keys(vitalSigns).length > 0 ? vitalSigns : undefined
@@ -187,7 +187,7 @@ export function ResidentDetailModal({
                   </span>
                 </div>
                 <div className="text-xs text-slate-300 mt-1 flex flex-wrap gap-x-4 gap-y-1">
-                  <span>Nascimento: <strong>{resident.birthDate}</strong></span>
+                  <span>Nascimento: <strong>{resident.birthDate.includes('-') ? resident.birthDate.split('-').reverse().join('/') : resident.birthDate}</strong></span>
                   <span>Dieta: <strong>{resident.dietType}</strong></span>
                 </div>
               </div>

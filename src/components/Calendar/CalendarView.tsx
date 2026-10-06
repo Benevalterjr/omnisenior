@@ -228,14 +228,12 @@ export function CalendarView({ residents }: CalendarViewProps) {
     setSelectedEvent(null);
   };
 
-  // Hours array 0 AM to 11 PM
+  // Hours array 00:00 to 23:00 (Padrão 24h do Brasil)
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
+  // Formato de hora padrão Brasil: 24h (ex: 08:00, 14:00, 20:00)
   const formatHourLabel = (hour: number) => {
-    if (hour === 0) return '12 AM';
-    if (hour < 12) return `${hour} AM`;
-    if (hour === 12) return '12 PM';
-    return `${hour - 12} PM`;
+    return `${hour.toString().padStart(2, '0')}:00`;
   };
 
   // Format date helper: YYYY-MM-DD
@@ -244,6 +242,32 @@ export function CalendarView({ residents }: CalendarViewProps) {
     const m = (d.getMonth() + 1).toString().padStart(2, '0');
     const day = d.getDate().toString().padStart(2, '0');
     return `${y}-${m}-${day}`;
+  };
+
+  // Formato brasileiro de data: DD/MM/AAAA
+  const formatDatePtBr = (dateStr: string) => {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+  };
+
+  // Formato brasileiro completo com dia da semana: "Terça-feira, 6 de outubro de 2026"
+  const formatDateFullPtBr = (dateStr: string) => {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const yearNum = parseInt(parts[0], 10);
+      const monthNum = parseInt(parts[1], 10) - 1;
+      const dayNum = parseInt(parts[2], 10);
+      const dateObj = new Date(yearNum, monthNum, dayNum);
+      const dayNames = [
+        'Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira',
+        'Quinta-feira', 'Sexta-feira', 'Sábado'
+      ];
+      return `${dayNames[dateObj.getDay()]}, ${dayNum} de ${monthNames[monthNum]} de ${yearNum}`;
+    }
+    return dateStr;
   };
 
   const dayNamesPt = ['DOM.', 'SEG.', 'TER.', 'QUA.', 'QUI.', 'SEX.', 'SÁB.'];
@@ -495,15 +519,17 @@ export function CalendarView({ residents }: CalendarViewProps) {
               
               {/* Header row with Days of the week */}
               <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-200 sticky top-0 bg-white z-20">
-                {/* Timezone label */}
-                <div className="p-2 text-[10px] text-slate-400 font-semibold border-r border-slate-200 flex items-end justify-center">
-                  GMT-03
+                {/* Timezone label (Padrão Brasília GMT-03) */}
+                <div className="p-2 text-[10px] text-slate-500 font-bold border-r border-slate-200 flex flex-col items-center justify-end text-center leading-tight">
+                  <span className="text-[9px] text-slate-400">BRT</span>
+                  <span>GMT-03</span>
                 </div>
 
                 {/* 7 Days Columns */}
                 {weekDays.map((dayDate, idx) => {
                   const isTodayCol = isToday(dayDate);
                   const isSelectedCol = dayDate.getDate() === currentDate.getDate();
+                  const dayMonthStr = `${dayDate.getDate().toString().padStart(2, '0')}/${(dayDate.getMonth() + 1).toString().padStart(2, '0')}`;
 
                   return (
                     <div
@@ -528,6 +554,11 @@ export function CalendarView({ residents }: CalendarViewProps) {
                         >
                           {dayDate.getDate()}
                         </button>
+                      </div>
+                      <div className={`text-[10px] font-medium mt-0.5 ${
+                        isTodayCol ? 'text-blue-600 font-bold' : 'text-slate-400'
+                      }`}>
+                        {dayMonthStr}
                       </div>
                     </div>
                   );
@@ -610,9 +641,11 @@ export function CalendarView({ residents }: CalendarViewProps) {
               <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-bold text-slate-800">
-                    {dayNamesPt[currentDate.getDay()]} {currentDate.getDate()} de {monthNames[currentDate.getMonth()]} de {currentDate.getFullYear()}
+                    {formatDateFullPtBr(toDateString(currentDate))}
                   </h3>
-                  <p className="text-xs text-slate-500">Agendamentos e rotina do dia</p>
+                  <p className="text-xs text-slate-500">
+                    {formatDatePtBr(toDateString(currentDate))} • Horário Padrão de Brasília (GMT-03)
+                  </p>
                 </div>
               </div>
 
@@ -793,30 +826,50 @@ export function CalendarView({ residents }: CalendarViewProps) {
                 ))}
               </div>
 
-              {/* Date & Time Row with Clock Icon */}
+              {/* Date & Time Row with Clock Icon (Padrão Brasil & Brasília) */}
               <div className="flex items-start space-x-3 text-xs text-slate-700 pt-2">
                 <Clock className="w-4 h-4 text-slate-400 mt-1 shrink-0" />
-                <div className="space-y-1 w-full">
-                  <div className="font-medium text-slate-800">
-                    Data: {popoverSlot.date} • {newStartTime} – {newEndTime}
+                <div className="space-y-1.5 w-full">
+                  <div className="font-semibold text-slate-900 text-sm">
+                    {formatDateFullPtBr(popoverSlot.date)}
+                  </div>
+                  <div className="text-xs text-slate-600 font-medium flex items-center space-x-2">
+                    <span>{newStartTime} às {newEndTime}</span>
+                    <span className="text-slate-300">•</span>
+                    <span>{formatDatePtBr(popoverSlot.date)}</span>
                   </div>
                   <div className="text-[11px] text-slate-400">
-                    Fuso horário GMT-03 • Não se repete
+                    Fuso horário: Horário Padrão de Brasília (GMT-03) • Não se repete
                   </div>
-                  <div className="flex items-center space-x-2 pt-1">
-                    <input
-                      type="time"
-                      value={newStartTime}
-                      onChange={(e) => setNewStartTime(e.target.value)}
-                      className="p-1 border border-slate-300 rounded-lg text-xs font-semibold"
-                    />
-                    <span className="text-slate-400">até</span>
-                    <input
-                      type="time"
-                      value={newEndTime}
-                      onChange={(e) => setNewEndTime(e.target.value)}
-                      className="p-1 border border-slate-300 rounded-lg text-xs font-semibold"
-                    />
+                  <div className="flex items-center space-x-2 pt-1 flex-wrap gap-y-1">
+                    <div className="flex items-center space-x-1">
+                      <label className="text-[10px] text-slate-500 font-semibold">Data:</label>
+                      <input
+                        type="date"
+                        value={popoverSlot.date}
+                        onChange={(e) => setPopoverSlot(prev => ({ ...prev, date: e.target.value }))}
+                        className="p-1 border border-slate-300 rounded-lg text-xs font-semibold bg-white"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <label className="text-[10px] text-slate-500 font-semibold">Início:</label>
+                      <input
+                        type="time"
+                        value={newStartTime}
+                        onChange={(e) => setNewStartTime(e.target.value)}
+                        className="p-1 border border-slate-300 rounded-lg text-xs font-semibold bg-white"
+                      />
+                    </div>
+                    <span className="text-slate-400 text-xs">até</span>
+                    <div className="flex items-center space-x-1">
+                      <label className="text-[10px] text-slate-500 font-semibold">Fim:</label>
+                      <input
+                        type="time"
+                        value={newEndTime}
+                        onChange={(e) => setNewEndTime(e.target.value)}
+                        className="p-1 border border-slate-300 rounded-lg text-xs font-semibold bg-white"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -950,8 +1003,11 @@ export function CalendarView({ residents }: CalendarViewProps) {
                   <h3 className="text-lg font-bold text-slate-900 leading-tight">
                     {selectedEvent.title}
                   </h3>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {selectedEvent.date} • {selectedEvent.startTime} - {selectedEvent.endTime}
+                  <div className="text-xs text-slate-700 mt-1">
+                    <strong>{formatDateFullPtBr(selectedEvent.date)}</strong>
+                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {selectedEvent.startTime} às {selectedEvent.endTime} (Horário Padrão de Brasília, GMT-03) • {formatDatePtBr(selectedEvent.date)}
                   </div>
                 </div>
               </div>

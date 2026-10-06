@@ -98,7 +98,9 @@ export function ResidentesListView({
                 <div className="mt-4 space-y-2 text-xs text-slate-600">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400">Nascimento:</span>
-                    <span className="font-medium text-slate-700">{resident.birthDate}</span>
+                    <span className="font-medium text-slate-700">
+                      {resident.birthDate.includes('-') ? resident.birthDate.split('-').reverse().join('/') : resident.birthDate}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between">

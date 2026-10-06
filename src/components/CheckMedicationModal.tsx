@@ -189,7 +189,9 @@ export function CheckMedicationModal({
               <User className="w-4 h-4 text-slate-400" />
               <span>Assinatura Digital: <strong className="text-slate-800">{currentUser.name}</strong> ({currentUser.role.toUpperCase()})</span>
             </div>
-            <span className="text-slate-400 text-[11px]">{new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="text-slate-500 text-[11px] font-medium">
+              {new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })} (Horário de Brasília)
+            </span>
           </div>
 
           {/* Footer Buttons */}

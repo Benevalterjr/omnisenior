@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   HeartHandshake, 
@@ -37,6 +37,31 @@ export function Navbar({
   const [syncing, setSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [brasiliaTime, setBrasiliaTime] = useState<string>('');
+
+  // Relógio oficial no fuso horário de Brasília (GMT-03)
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      const dateStr = now.toLocaleDateString('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      setBrasiliaTime(`${dateStr} • ${timeStr}`);
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSyncData = async () => {
     setSyncing(true);
@@ -89,15 +114,15 @@ export function Navbar({
             </div>
           </div>
 
-          {/* Center Info: Shift Badge */}
+          {/* Center Info: Horário de Brasília (GMT-03) & Shift Badge */}
           <div className="hidden md:flex items-center space-x-2">
-            <div className={`px-3 py-1 rounded-full text-xs font-medium border flex items-center space-x-1.5 ${shiftInfo.color}`}>
-              <Clock className="w-3.5 h-3.5" />
-              <span>{shiftInfo.label}</span>
+            <div className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 flex items-center space-x-1.5 shadow-2xs">
+              <Clock className="w-3.5 h-3.5 text-blue-600" />
+              <span>{brasiliaTime || 'Horário de Brasília'}</span>
+              <span className="text-[10px] font-bold text-slate-400 bg-white px-1.5 py-0.2 rounded border border-slate-200">GMT-03</span>
             </div>
-            <div className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center space-x-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Firestore Conectado</span>
+            <div className={`px-3 py-1 rounded-full text-xs font-medium border flex items-center space-x-1.5 ${shiftInfo.color}`}>
+              <span>{shiftInfo.label}</span>
             </div>
           </div>
 
