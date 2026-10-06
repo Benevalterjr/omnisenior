@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Perfil do usuário
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (request.auth.uid == userId || getUserRole() == 'admin');
+    }
+
+    // Residentes e Subcoleções clínicas
+    match /residents/{residentId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && getUserRole() in ['admin', 'enfermeiro', 'medico'];
+
+      // Prescrições: apenas médicos e enfermeiros podem criar/editar
+      match /prescriptions/{prescriptionId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && getUserRole() in ['admin', 'medico', 'enfermeiro'];
+      }
+
+      // Registro de medicação e evoluções: cuidadores e equipe de saúde podem registrar
+      match /medication_logs/{logId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated() && getUserRole() in ['admin', 'medico', 'enfermeiro', 'cuidador'];
+      }
+
+      match /evolutions/{evolutionId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && getUserRole() in ['admin', 'medico', 'enfermeiro', 'cuidador'];
+      }
+
+      match /individual_inventory/{itemId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && getUserRole() in ['admin', 'enfermeiro', 'cuidador'];
+      }
+    }
+  }
+}
