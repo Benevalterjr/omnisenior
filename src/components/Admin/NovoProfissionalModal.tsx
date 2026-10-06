@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserProfile, UserRole, UserPermissions } from '@/types/ilpi';
-import { DEFAULT_ROLE_PERMISSIONS, ROLE_LABELS } from '@/lib/permissionsService';
+import { DEFAULT_ROLE_PERMISSIONS, ROLE_LABELS, getUserPermissions } from '@/lib/permissionsService';
 import { 
   X, 
   UserPlus, 
@@ -13,19 +13,24 @@ import {
   Mail,
   Phone,
   Clock,
-  KeyRound
+  KeyRound,
+  Edit3,
+  UserCheck,
+  Power
 } from 'lucide-react';
 
 interface NovoProfissionalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (user: Omit<UserProfile, 'id'>) => void;
+  onSave: (user: Omit<UserProfile, 'id'>, idToEdit?: string) => void;
+  userToEdit?: UserProfile | null;
 }
 
 export function NovoProfissionalModal({
   isOpen,
   onClose,
-  onSave
+  onSave,
+  userToEdit
 }: NovoProfissionalModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,25 +39,56 @@ export function NovoProfissionalModal({
   const [registry, setRegistry] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [shiftPreference, setShiftPreference] = useState<'manha' | 'tarde' | 'noite' | 'comercial' | 'escala_12x36'>('manha');
+  const [status, setStatus] = useState<'active' | 'inactive'>('active');
   
   // Custom permissions overrides
   const [customPermissions, setCustomPermissions] = useState<UserPermissions>(DEFAULT_ROLE_PERMISSIONS.cuidador);
   const [showPermissionsCustomizer, setShowPermissionsCustomizer] = useState(false);
 
+  // Sync state whenever modal opens or userToEdit changes
+  useEffect(() => {
+    if (userToEdit) {
+      setName(userToEdit.name || '');
+      setEmail(userToEdit.email || '');
+      setPhone(userToEdit.phone || '');
+      setRole(userToEdit.role || 'cuidador');
+      setRegistry(userToEdit.registry || '');
+      setSpecialty(userToEdit.specialty || '');
+      setShiftPreference(userToEdit.shiftPreference || 'manha');
+      setStatus(userToEdit.status || 'active');
+      setCustomPermissions(getUserPermissions(userToEdit));
+      setShowPermissionsCustomizer(!!userToEdit.customPermissions);
+    } else {
+      setName('');
+      setEmail('');
+      setPhone('');
+      setRole('cuidador');
+      setRegistry('Cert. Cuidador ILPI #');
+      setSpecialty('');
+      setShiftPreference('manha');
+      setStatus('active');
+      setCustomPermissions(DEFAULT_ROLE_PERMISSIONS.cuidador);
+      setShowPermissionsCustomizer(false);
+    }
+  }, [userToEdit, isOpen]);
+
   if (!isOpen) return null;
 
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
+    // If not editing or user explicitly changes role, update default permissions
     setCustomPermissions(DEFAULT_ROLE_PERMISSIONS[newRole]);
 
-    // Pre-fill suggested registry placeholder
-    if (newRole === 'medico') setRegistry('CRM/SP ');
-    else if (newRole === 'enfermeiro') setRegistry('COREN/SP ');
-    else if (newRole === 'fisioterapeuta') setRegistry('CREFITO-3/ ');
-    else if (newRole === 'nutricionista') setRegistry('CRN-3/ ');
-    else if (newRole === 'psicologo') setRegistry('CRP-06/ ');
-    else if (newRole === 'cuidador') setRegistry('Cert. Cuidador ILPI #');
-    else setRegistry('');
+    // Pre-fill suggested registry placeholder if empty or placeholder
+    if (!registry || registry.includes('/') || registry.includes('#')) {
+      if (newRole === 'medico') setRegistry('CRM/SP ');
+      else if (newRole === 'enfermeiro') setRegistry('COREN/SP ');
+      else if (newRole === 'fisioterapeuta') setRegistry('CREFITO-3/ ');
+      else if (newRole === 'nutricionista') setRegistry('CRN-3/ ');
+      else if (newRole === 'psicologo') setRegistry('CRP-06/ ');
+      else if (newRole === 'cuidador') setRegistry('Cert. Cuidador ILPI #');
+      else setRegistry('');
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -67,10 +103,10 @@ export function NovoProfissionalModal({
       registry: registry.trim() || undefined,
       specialty: specialty.trim() || ROLE_LABELS[role]?.title || undefined,
       shiftPreference,
-      status: 'active',
+      status,
       customPermissions,
-      photoUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=0d9488&color=fff`
-    });
+      photoUrl: userToEdit?.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=0d9488&color=fff`
+    }, userToEdit?.id);
 
     onClose();
   };
@@ -82,6 +118,8 @@ export function NovoProfissionalModal({
     }));
   };
 
+  const isEditing = !!userToEdit;
+
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
@@ -90,12 +128,16 @@ export function NovoProfissionalModal({
         <div className="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white px-6 py-5 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-purple-300">
-              <UserPlus className="w-5 h-5" />
+              {isEditing ? <Edit3 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="text-lg font-bold tracking-tight">Cadastrar Novo Colaborador</h3>
+              <h3 className="text-lg font-bold tracking-tight">
+                {isEditing ? `Editar Profissional: ${userToEdit.name}` : 'Cadastrar Novo Colaborador'}
+              </h3>
               <p className="text-xs text-purple-200/80">
-                Adicione médicos, enfermeiros, cuidadores e configure seus acessos clínicos.
+                {isEditing 
+                  ? 'Atualize dados cadastrais, cargo, escala e permissões clínicas.' 
+                  : 'Adicione médicos, enfermeiros, cuidadores e configure seus acessos clínicos.'}
               </p>
             </div>
           </div>
@@ -110,6 +152,30 @@ export function NovoProfissionalModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
           
+          {/* Status Alert if editing */}
+          {isEditing && (
+            <div className="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className={`w-3 h-3 rounded-full ${status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                <span className="text-xs font-bold text-slate-800">
+                  Status da Conta: {status === 'active' ? 'Ativo (Acesso Liberado)' : 'Inativo (Acesso Bloqueado)'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatus(prev => prev === 'active' ? 'inactive' : 'active')}
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition flex items-center space-x-1 ${
+                  status === 'active'
+                    ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                }`}
+              >
+                <Power className="w-3.5 h-3.5" />
+                <span>{status === 'active' ? 'Desativar Usuário' : 'Reativar Usuário'}</span>
+              </button>
+            </div>
+          )}
+
           {/* Role Selector Grid */}
           <div>
             <label className="text-xs font-bold text-slate-700 block mb-2">
@@ -248,7 +314,7 @@ export function NovoProfissionalModal({
                   <span>Permissões de Acesso e Visualização</span>
                 </span>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Predefinidas automaticamente para o perfil <strong>{ROLE_LABELS[role]?.title}</strong>.
+                  Configuradas para o cargo <strong>{ROLE_LABELS[role]?.title}</strong>. Ajuste conforme necessidade.
                 </p>
               </div>
 
@@ -317,7 +383,7 @@ export function NovoProfissionalModal({
               className="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-md transition flex items-center space-x-1.5"
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>Salvar & Liberar Acesso</span>
+              <span>{isEditing ? 'Salvar Alterações' : 'Cadastrar & Liberar Acesso'}</span>
             </button>
           </div>
 

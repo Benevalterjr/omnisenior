@@ -156,7 +156,10 @@ export function AdminDashboardView() {
 
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setIsNewUserModalOpen(true)}
+              onClick={() => {
+                setEditingPermissionsUser(null);
+                setIsNewUserModalOpen(true);
+              }}
               className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-5 py-3 rounded-2xl shadow-lg transition flex items-center space-x-2 shrink-0 border border-purple-400/30"
             >
               <PlusCircle className="w-4 h-4" />
@@ -422,10 +425,22 @@ export function AdminDashboardView() {
                       <span>{isCurrent ? 'Perfil Atual' : 'Acessar como'}</span>
                     </button>
 
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1.5">
+                      <button
+                        onClick={() => {
+                          setEditingPermissionsUser(user);
+                          setIsNewUserModalOpen(true);
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-800 text-xs font-bold transition flex items-center space-x-1"
+                        title="Editar dados cadastrais, cargo e permissões"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Editar</span>
+                      </button>
+
                       <button
                         onClick={() => toggleUserStatus(user.id)}
-                        className={`p-1.5 rounded-lg border text-xs transition ${
+                        className={`p-1.5 rounded-xl border text-xs transition ${
                           user.status === 'active'
                             ? 'text-emerald-700 hover:bg-emerald-50 border-emerald-200'
                             : 'text-slate-400 hover:bg-slate-100 border-slate-200'
@@ -442,7 +457,7 @@ export function AdminDashboardView() {
                               deleteUser(user.id);
                             }
                           }}
-                          className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                          className="p-1.5 rounded-xl border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
                           title="Excluir profissional"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -573,6 +588,63 @@ export function AdminDashboardView() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Custom Permissions per User list */}
+          <div className="mt-8 pt-6 border-t border-slate-200 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="text-sm font-bold text-slate-800 flex items-center space-x-2">
+                  <ShieldCheck className="w-4 h-4 text-purple-600" />
+                  <span>Ajuste Individual de Permissões por Profissional</span>
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Conceda ou restrinja permissões específicas para cada colaborador além do padrão de seu cargo.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {users.map((u) => {
+                const hasCustom = !!u.customPermissions;
+                const roleInfo = ROLE_LABELS[u.role] || ROLE_LABELS.cuidador;
+                return (
+                  <div key={u.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs hover:border-purple-300 transition">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={u.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=7c3aed&color=fff`}
+                        alt={u.name}
+                        className="w-10 h-10 rounded-xl object-cover border border-slate-200"
+                      />
+                      <div>
+                        <h5 className="font-bold text-xs text-slate-800 leading-tight">{u.name}</h5>
+                        <div className="flex items-center space-x-1.5 mt-1">
+                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${roleInfo.color}`}>
+                            {roleInfo.badge}
+                          </span>
+                          {hasCustom && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200">
+                              Customizado
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setEditingPermissionsUser(u);
+                        setIsNewUserModalOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-xl border border-purple-300 bg-white hover:bg-purple-50 text-purple-700 text-xs font-bold transition flex items-center space-x-1 shadow-2xs"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Editar</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -872,13 +944,23 @@ export function AdminDashboardView() {
         </div>
       )}
 
-      {/* Modal de Cadastro de Novo Profissional */}
+      {/* Modal de Cadastro e Edição de Profissional */}
       <NovoProfissionalModal
         isOpen={isNewUserModalOpen}
-        onClose={() => setIsNewUserModalOpen(false)}
-        onSave={(newUserData) => {
-          addUser(newUserData);
+        onClose={() => {
+          setIsNewUserModalOpen(false);
+          setEditingPermissionsUser(null);
         }}
+        onSave={(userData, idToEdit) => {
+          if (idToEdit) {
+            updateUser(idToEdit, userData);
+          } else {
+            addUser(userData);
+          }
+          setIsNewUserModalOpen(false);
+          setEditingPermissionsUser(null);
+        }}
+        userToEdit={editingPermissionsUser}
       />
 
     </div>
