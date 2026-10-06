@@ -4,55 +4,96 @@ export const CALENDAR_CATEGORIES: CalendarCategoryConfig[] = [
   {
     id: 'consulta',
     label: 'Consultas Médicas & Exames',
-    color: '#0284c7', // Sky / Blue
-    bgClass: 'bg-sky-100 hover:bg-sky-200 text-sky-900 border-l-4 border-sky-600',
-    borderClass: 'border-sky-500',
-    textClass: 'text-sky-700'
+    color: '#0284c7', // Sky / Google Blue
+    bgClass: 'bg-[#0284c7] hover:bg-[#0369a1] text-white',
+    borderClass: 'border-[#0284c7]',
+    textClass: 'text-white'
   },
   {
     id: 'medicamento',
     label: 'Aprazamento & Checagens',
     color: '#0d9488', // Teal
-    bgClass: 'bg-teal-100 hover:bg-teal-200 text-teal-900 border-l-4 border-teal-600',
-    borderClass: 'border-teal-500',
-    textClass: 'text-teal-700'
+    bgClass: 'bg-[#0d9488] hover:bg-[#0f766e] text-white',
+    borderClass: 'border-[#0d9488]',
+    textClass: 'text-white'
   },
   {
     id: 'visita',
     label: 'Visitas Familiares',
     color: '#7c3aed', // Purple
-    bgClass: 'bg-purple-100 hover:bg-purple-200 text-purple-900 border-l-4 border-purple-600',
-    borderClass: 'border-purple-500',
-    textClass: 'text-purple-700'
+    bgClass: 'bg-[#7c3aed] hover:bg-[#6d28d9] text-white',
+    borderClass: 'border-[#7c3aed]',
+    textClass: 'text-white'
   },
   {
     id: 'terapia',
     label: 'Fisioterapia & Terapias',
     color: '#16a34a', // Emerald / Green
-    bgClass: 'bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border-l-4 border-emerald-600',
-    borderClass: 'border-emerald-500',
-    textClass: 'text-emerald-700'
+    bgClass: 'bg-[#16a34a] hover:bg-[#15803d] text-white',
+    borderClass: 'border-[#16a34a]',
+    textClass: 'text-white'
   },
   {
     id: 'aniversario',
     label: 'Aniversários & Convivência',
-    color: '#ea580c', // Orange
-    bgClass: 'bg-orange-100 hover:bg-orange-200 text-orange-900 border-l-4 border-orange-600',
-    borderClass: 'border-orange-500',
-    textClass: 'text-orange-700'
+    color: '#0b8043', // Google Green (🎂 Happy birthday)
+    bgClass: 'bg-[#0b8043] hover:bg-[#096a37] text-white',
+    borderClass: 'border-[#0b8043]',
+    textClass: 'text-white'
   },
   {
     id: 'tarefa',
     label: 'Tarefas da Equipe',
     color: '#4f46e5', // Indigo
-    bgClass: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border-l-4 border-indigo-600',
-    borderClass: 'border-indigo-500',
-    textClass: 'text-indigo-700'
+    bgClass: 'bg-[#4f46e5] hover:bg-[#4338ca] text-white',
+    borderClass: 'border-[#4f46e5]',
+    textClass: 'text-white'
   }
 ];
 
-// Events around October 2026 (matching the user's screenshot dates: Oct 4 - Oct 10, 2026)
+// Events around October 2026 and November 2026 (matching Google Calendar screenshots)
 export const INITIAL_CALENDAR_EVENTS: CalendarEvent[] = [
+  {
+    id: 'evt-bday-seba',
+    title: '🎂 Aniversário: Dona Sebastiana (84 anos)',
+    category: 'aniversario',
+    residentId: 'res-1',
+    residentName: 'Dona Sebastiana',
+    date: '2026-10-08',
+    startTime: '08:00',
+    endTime: '18:00',
+    isAllDay: true,
+    location: 'Salão Nobre da ILPI',
+    description: 'Comemoração dos 84 anos com bolo diet e visita da família.',
+    assignedTo: 'Equipe de Recreação',
+    color: '#0b8043'
+  },
+  {
+    id: 'evt-plantao-out',
+    title: '🏥 Plantão Integral: Enf. Juliana & Equipe',
+    category: 'tarefa',
+    date: '2026-10-06',
+    startTime: '07:00',
+    endTime: '19:00',
+    isAllDay: true,
+    location: 'Posto de Enfermagem Central',
+    description: 'Plantão diurno 12h com checagens completas e curativos.',
+    assignedTo: 'Enf. Juliana Ramos',
+    color: '#4f46e5'
+  },
+  {
+    id: 'evt-bday-nov',
+    title: '🎂 Happy birthday!',
+    category: 'aniversario',
+    date: '2026-11-12',
+    startTime: '08:00',
+    endTime: '18:00',
+    isAllDay: true,
+    location: 'Salão de Convivência',
+    description: 'Comemoração especial de aniversário dos residentes de Novembro.',
+    assignedTo: 'Equipe Multidisciplinar',
+    color: '#0b8043'
+  },
   {
     id: 'evt-1',
     title: 'Visita Familiar: Carlos c/ Dona Sebastiana',

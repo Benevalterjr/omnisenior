@@ -66,6 +66,7 @@ export function CalendarView({ residents }: CalendarViewProps) {
   const [newCategory, setNewCategory] = useState<CalendarCategory>('consulta');
   const [newStartTime, setNewStartTime] = useState('10:00');
   const [newEndTime, setNewEndTime] = useState('11:00');
+  const [isAllDay, setIsAllDay] = useState(false);
   const [newResidentId, setNewResidentId] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [newDescription, setNewDescription] = useState('');
@@ -189,8 +190,22 @@ export function CalendarView({ residents }: CalendarViewProps) {
     const nextHour = ((hour + 1) % 24).toString().padStart(2, '0');
 
     setPopoverSlot({ date: dateStr, hour });
+    setIsAllDay(false);
     setNewStartTime(`${formattedHour}:00`);
     setNewEndTime(`${nextHour}:00`);
+    setNewTitle('');
+    setNewResidentId('');
+    setNewLocation('');
+    setNewDescription('');
+    setIsCreateModalOpen(true);
+  };
+
+  // Open Quick Create for all-day banner slot
+  const handleAllDayCellClick = (dateStr: string) => {
+    setPopoverSlot({ date: dateStr, hour: 8 });
+    setIsAllDay(true);
+    setNewStartTime('08:00');
+    setNewEndTime('18:00');
     setNewTitle('');
     setNewResidentId('');
     setNewLocation('');
@@ -211,8 +226,9 @@ export function CalendarView({ residents }: CalendarViewProps) {
       title: newTitle.trim(),
       category: newCategory,
       date: popoverSlot.date,
-      startTime: newStartTime,
-      endTime: newEndTime,
+      startTime: isAllDay ? '00:00' : newStartTime,
+      endTime: isAllDay ? '23:59' : newEndTime,
+      isAllDay: isAllDay,
       residentId: newResidentId || undefined,
       residentName: residentObj ? residentObj.name : undefined,
       location: newLocation.trim() || undefined,
@@ -519,123 +535,166 @@ export function CalendarView({ residents }: CalendarViewProps) {
           
           {/* SEMANA VIEW */}
           {viewMode === 'semana' && (
-            <div className="flex-1 flex flex-col overflow-y-auto">
-              
-              {/* Header row with Days of the week */}
-              <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-200 sticky top-0 bg-white z-20">
-                {/* Timezone label (Padrão Brasília GMT-03) */}
-                <div className="p-2 text-[10px] text-slate-500 font-bold border-r border-slate-200 flex flex-col items-center justify-end text-center leading-tight">
-                  <span className="text-[9px] text-slate-400">BRT</span>
-                  <span>GMT-03</span>
+            <div className="flex-1 flex flex-col overflow-y-auto overflow-x-auto">
+              <div className="min-w-[720px] md:min-w-full flex flex-col flex-1">
+                
+                {/* 1. Header row with Days of the week */}
+                <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-200 sticky top-0 bg-white z-20">
+                  {/* Timezone label (Padrão Brasília GMT-03) */}
+                  <div className="p-2 text-[10px] text-slate-500 font-bold border-r border-slate-200 flex flex-col items-center justify-end text-center leading-tight">
+                    <span className="text-[9px] text-slate-400">BRT</span>
+                    <span>GMT-03</span>
+                  </div>
+
+                  {/* 7 Days Columns */}
+                  {weekDays.map((dayDate, idx) => {
+                    const isTodayCol = isToday(dayDate);
+                    const isSelectedCol = dayDate.getDate() === currentDate.getDate();
+                    const dayMonthStr = `${dayDate.getDate().toString().padStart(2, '0')}/${(dayDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="py-2.5 text-center border-r border-slate-200 last:border-r-0"
+                      >
+                        <div className={`text-[11px] font-bold uppercase tracking-wider ${
+                          isTodayCol ? 'text-blue-600' : 'text-slate-500'
+                        }`}>
+                          {dayNamesPt[dayDate.getDay()]}
+                        </div>
+                        <div className="mt-1 flex justify-center">
+                          <button
+                            onClick={() => setCurrentDate(dayDate)}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-normal transition ${
+                              isTodayCol
+                                ? 'bg-blue-600 text-white font-bold shadow-xs'
+                                : isSelectedCol
+                                ? 'bg-slate-100 text-slate-800 font-semibold'
+                                : 'text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            {dayDate.getDate()}
+                          </button>
+                        </div>
+                        <div className={`text-[10px] font-medium mt-0.5 ${
+                          isTodayCol ? 'text-blue-600 font-bold' : 'text-slate-400'
+                        }`}>
+                          {dayMonthStr}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* 7 Days Columns */}
-                {weekDays.map((dayDate, idx) => {
-                  const isTodayCol = isToday(dayDate);
-                  const isSelectedCol = dayDate.getDate() === currentDate.getDate();
-                  const dayMonthStr = `${dayDate.getDate().toString().padStart(2, '0')}/${(dayDate.getMonth() + 1).toString().padStart(2, '0')}`;
+                {/* 2. All-Day / Dia Inteiro Row (Exact Google Calendar Banner Row) */}
+                <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-200 bg-slate-50/40 min-h-[44px] sticky top-[82px] bg-white z-10 shadow-2xs">
+                  <div className="text-[10px] font-semibold text-slate-400 text-right pr-2 py-2 border-r border-slate-200 flex items-center justify-end select-none">
+                    <span className="text-[9px] uppercase tracking-wider text-slate-400">Dia todo</span>
+                  </div>
 
-                  return (
-                    <div
-                      key={idx}
-                      className="py-2.5 text-center border-r border-slate-200 last:border-r-0"
-                    >
-                      <div className={`text-[11px] font-bold uppercase tracking-wider ${
-                        isTodayCol ? 'text-blue-600' : 'text-slate-500'
-                      }`}>
-                        {dayNamesPt[dayDate.getDay()]}
+                  {weekDays.map((dayDate, dayIdx) => {
+                    const dateStr = toDateString(dayDate);
+                    const allDayEvents = filteredEvents.filter(e => e.date === dateStr && (e.isAllDay || e.startTime === '00:00' && e.endTime === '23:59'));
+
+                    return (
+                      <div
+                        key={dayIdx}
+                        onClick={() => handleAllDayCellClick(dateStr)}
+                        className="border-r border-slate-200 last:border-r-0 hover:bg-blue-50/20 transition cursor-pointer p-1 flex flex-col justify-center min-h-[44px]"
+                        title="Clique para adicionar evento de dia inteiro"
+                      >
+                        {allDayEvents.map(evt => {
+                          const catConfig = CALENDAR_CATEGORIES.find(c => c.id === evt.category);
+                          const pillColor = evt.color || catConfig?.color || '#0b8043';
+
+                          return (
+                            <div
+                              key={evt.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEvent(evt);
+                              }}
+                              className="w-full rounded-md px-2.5 py-1 text-white text-[11px] font-bold shadow-xs truncate cursor-pointer transition hover:brightness-105 active:scale-[0.99] flex items-center space-x-1 mb-0.5 last:mb-0"
+                              style={{ backgroundColor: pillColor }}
+                              title={evt.title}
+                            >
+                              <span className="truncate">{evt.title}</span>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className="mt-1 flex justify-center">
-                        <button
-                          onClick={() => setCurrentDate(dayDate)}
-                          className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-normal transition ${
-                            isTodayCol
-                              ? 'bg-blue-600 text-white font-bold shadow-xs'
-                              : isSelectedCol
-                              ? 'bg-slate-100 text-slate-800 font-semibold'
-                              : 'text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          {dayDate.getDate()}
-                        </button>
-                      </div>
-                      <div className={`text-[10px] font-medium mt-0.5 ${
-                        isTodayCol ? 'text-blue-600 font-bold' : 'text-slate-400'
-                      }`}>
-                        {dayMonthStr}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
 
-              {/* 24 Hours Grid */}
-              <div className="flex-1 divide-y divide-slate-100">
-                {hours.map((hour) => {
-                  return (
-                    <div
-                      key={hour}
-                      className="grid grid-cols-[60px_repeat(7,1fr)] min-h-[50px] relative group"
-                    >
-                      {/* Left Hour Label */}
-                      <div className="text-[10px] font-semibold text-slate-400 text-right pr-2 pt-1 border-r border-slate-200 select-none">
-                        {formatHourLabel(hour)}
-                      </div>
+                {/* 3. 24 Hours Grid */}
+                <div className="flex-1 divide-y divide-slate-100">
+                  {hours.map((hour) => {
+                    return (
+                      <div
+                        key={hour}
+                        className="grid grid-cols-[60px_repeat(7,1fr)] min-h-[52px] relative group"
+                      >
+                        {/* Left Hour Label */}
+                        <div className="text-[10px] font-semibold text-slate-400 text-right pr-2 pt-1.5 border-r border-slate-200 select-none">
+                          {formatHourLabel(hour)}
+                        </div>
 
-                      {/* 7 Day Slots for this Hour */}
-                      {weekDays.map((dayDate, dayIdx) => {
-                        const dateStr = toDateString(dayDate);
-                        const isTodayCol = isToday(dayDate);
+                        {/* 7 Day Slots for this Hour */}
+                        {weekDays.map((dayDate, dayIdx) => {
+                          const dateStr = toDateString(dayDate);
 
-                        // Find events scheduled in this day & hour
-                        const slotEvents = filteredEvents.filter(e => {
-                          if (e.date !== dateStr) return false;
-                          const startH = parseInt(e.startTime.split(':')[0], 10);
-                          return startH === hour;
-                        });
+                          // Find events scheduled in this day & hour (excluding all-day events)
+                          const slotEvents = filteredEvents.filter(e => {
+                            if (e.date !== dateStr) return false;
+                            if (e.isAllDay) return false;
+                            const startH = parseInt(e.startTime.split(':')[0], 10);
+                            return startH === hour;
+                          });
 
-                        return (
-                          <div
-                            key={dayIdx}
-                            onClick={() => handleCellClick(dateStr, hour)}
-                            className="border-r border-slate-100 last:border-r-0 hover:bg-blue-50/20 transition cursor-pointer relative p-0.5"
-                          >
-                            {/* Render Event Chips */}
-                            {slotEvents.map(evt => {
-                              const catConfig = CALENDAR_CATEGORIES.find(c => c.id === evt.category);
+                          return (
+                            <div
+                              key={dayIdx}
+                              onClick={() => handleCellClick(dateStr, hour)}
+                              className="border-r border-slate-100 last:border-r-0 hover:bg-blue-50/20 transition cursor-pointer relative p-1 flex flex-col justify-start"
+                            >
+                              {/* Render Event Pills - full width of the field, just like Google Calendar */}
+                              {slotEvents.map(evt => {
+                                const catConfig = CALENDAR_CATEGORIES.find(c => c.id === evt.category);
+                                const pillColor = evt.color || catConfig?.color || '#0284c7';
 
-                              return (
-                                <div
-                                  key={evt.id}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedEvent(evt);
-                                  }}
-                                  className={`rounded-lg px-2 py-1 mb-1 text-[11px] font-semibold shadow-xs border transition truncate cursor-pointer z-10 ${
-                                    catConfig?.bgClass || 'bg-blue-100 text-blue-900 border-blue-300'
-                                  }`}
-                                  title={`${evt.startTime} - ${evt.title}`}
-                                >
-                                  <div className="flex items-center space-x-1">
-                                    <span className="font-bold">{evt.startTime}</span>
-                                    <span className="truncate">{evt.title}</span>
-                                  </div>
-                                  {evt.residentName && (
-                                    <div className="text-[9px] opacity-80 truncate">
-                                      {evt.residentName}
+                                return (
+                                  <div
+                                    key={evt.id}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedEvent(evt);
+                                    }}
+                                    className="w-full rounded-md px-2 py-1 mb-1 text-white shadow-xs cursor-pointer transition hover:brightness-105 active:scale-[0.99] overflow-hidden"
+                                    style={{ backgroundColor: pillColor }}
+                                    title={`${evt.startTime} - ${evt.endTime}: ${evt.title}`}
+                                  >
+                                    <div className="flex items-center space-x-1.5 min-w-0">
+                                      <span className="text-[10px] font-bold shrink-0 opacity-95">{evt.startTime}</span>
+                                      <span className="text-[11px] font-semibold truncate leading-tight">{evt.title}</span>
                                     </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
+                                    {evt.residentName && (
+                                      <div className="text-[9px] opacity-90 truncate leading-tight mt-0.5 font-normal">
+                                        {evt.residentName}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
 
+              </div>
             </div>
           )}
 
@@ -653,11 +712,41 @@ export function CalendarView({ residents }: CalendarViewProps) {
                 </div>
               </div>
 
+              {/* All-Day banner if present in Day View */}
+              {(() => {
+                const dateStr = toDateString(currentDate);
+                const allDayEvents = filteredEvents.filter(e => e.date === dateStr && (e.isAllDay || e.startTime === '00:00' && e.endTime === '23:59'));
+                if (allDayEvents.length === 0) return null;
+                return (
+                  <div className="p-3 bg-slate-50/80 border-b border-slate-200 flex flex-col space-y-1.5">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Dia Inteiro
+                    </div>
+                    {allDayEvents.map(evt => {
+                      const catConfig = CALENDAR_CATEGORIES.find(c => c.id === evt.category);
+                      const pillColor = evt.color || catConfig?.color || '#0b8043';
+                      return (
+                        <div
+                          key={evt.id}
+                          onClick={() => setSelectedEvent(evt)}
+                          className="w-full rounded-lg px-3 py-2 text-white text-xs font-bold shadow-xs cursor-pointer transition hover:brightness-105 active:scale-[0.99] flex items-center justify-between"
+                          style={{ backgroundColor: pillColor }}
+                        >
+                          <span className="truncate">{evt.title}</span>
+                          {evt.residentName && <span className="text-[11px] opacity-90 font-normal ml-2">{evt.residentName}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
               <div className="flex-1 divide-y divide-slate-100">
                 {hours.map((hour) => {
                   const dateStr = toDateString(currentDate);
                   const dayEvents = filteredEvents.filter(e => {
                     if (e.date !== dateStr) return false;
+                    if (e.isAllDay) return false;
                     const startH = parseInt(e.startTime.split(':')[0], 10);
                     return startH === hour;
                   });
@@ -666,15 +755,16 @@ export function CalendarView({ residents }: CalendarViewProps) {
                     <div
                       key={hour}
                       onClick={() => handleCellClick(dateStr, hour)}
-                      className="grid grid-cols-[70px_1fr] min-h-[56px] hover:bg-blue-50/20 cursor-pointer p-1"
+                      className="grid grid-cols-[70px_1fr] min-h-[56px] hover:bg-blue-50/20 cursor-pointer p-1.5 border-b border-slate-100"
                     >
                       <div className="text-xs font-semibold text-slate-400 text-right pr-3 pt-1 border-r border-slate-200">
                         {formatHourLabel(hour)}
                       </div>
 
-                      <div className="pl-3 space-y-1">
+                      <div className="pl-3 pr-2 space-y-1.5 w-full flex flex-col justify-center">
                         {dayEvents.map(evt => {
                           const catConfig = CALENDAR_CATEGORIES.find(c => c.id === evt.category);
+                          const pillColor = evt.color || catConfig?.color || '#0284c7';
 
                           return (
                             <div
@@ -683,22 +773,21 @@ export function CalendarView({ residents }: CalendarViewProps) {
                                 e.stopPropagation();
                                 setSelectedEvent(evt);
                               }}
-                              className={`p-2.5 rounded-xl border text-xs font-semibold max-w-lg shadow-xs ${
-                                catConfig?.bgClass || 'bg-blue-100 text-blue-900 border-blue-300'
-                              }`}
+                              className="w-full p-2.5 rounded-xl text-white shadow-xs cursor-pointer transition hover:brightness-105 active:scale-[0.99]"
+                              style={{ backgroundColor: pillColor }}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-bold text-sm">{evt.title}</span>
-                                <span className="text-[11px]">{evt.startTime} - {evt.endTime}</span>
+                                <span className="font-bold text-sm truncate">{evt.title}</span>
+                                <span className="text-xs font-medium opacity-90 shrink-0 ml-2">{evt.startTime} - {evt.endTime}</span>
                               </div>
                               {evt.residentName && (
-                                <div className="text-xs text-slate-600 mt-0.5">
+                                <div className="text-xs opacity-90 mt-0.5 truncate">
                                   Residente: <strong>{evt.residentName}</strong>
                                 </div>
                               )}
                               {evt.location && (
-                                <div className="text-[11px] text-slate-500 flex items-center space-x-1 mt-1">
-                                  <MapPin className="w-3 h-3" />
+                                <div className="text-[11px] opacity-80 flex items-center space-x-1 mt-1 truncate">
+                                  <MapPin className="w-3 h-3 shrink-0" />
                                   <span>{evt.location}</span>
                                 </div>
                               )}
@@ -748,18 +837,28 @@ export function CalendarView({ residents }: CalendarViewProps) {
                         </span>
                       </div>
 
-                      <div className="space-y-1 mt-1 flex-1 overflow-hidden">
-                        {dayEvents.slice(0, 3).map(evt => (
-                          <div
-                            key={evt.id}
-                            className="text-[10px] truncate px-1.5 py-0.5 rounded-md font-medium text-white"
-                            style={{ backgroundColor: evt.color || '#0284c7' }}
-                          >
-                            {evt.startTime} {evt.title}
-                          </div>
-                        ))}
+                      <div className="space-y-1 mt-1 flex-1 overflow-hidden w-full">
+                        {dayEvents.slice(0, 3).map(evt => {
+                          const catConfig = CALENDAR_CATEGORIES.find(c => c.id === evt.category);
+                          const pillColor = evt.color || catConfig?.color || '#0284c7';
+
+                          return (
+                            <div
+                              key={evt.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEvent(evt);
+                              }}
+                              className="w-full text-[11px] truncate px-2 py-0.5 rounded-md font-semibold text-white shadow-2xs block transition hover:brightness-105 cursor-pointer"
+                              style={{ backgroundColor: pillColor }}
+                              title={`${evt.isAllDay ? '' : `${evt.startTime} - `}${evt.title}`}
+                            >
+                              {!evt.isAllDay && evt.startTime ? `${evt.startTime} ` : ''}{evt.title}
+                            </div>
+                          );
+                        })}
                         {dayEvents.length > 3 && (
-                          <div className="text-[9px] text-slate-400 font-bold px-1">
+                          <div className="text-[10px] text-slate-400 font-bold px-1">
                             +{dayEvents.length - 3} mais
                           </div>
                         )}
@@ -845,6 +944,20 @@ export function CalendarView({ residents }: CalendarViewProps) {
                   <div className="text-[11px] text-slate-400">
                     Fuso horário: Horário Padrão de Brasília (GMT-03) • Não se repete
                   </div>
+                  
+                  {/* Dia inteiro Checkbox */}
+                  <div className="flex items-center space-x-2 pt-1 pb-1">
+                    <label className="flex items-center space-x-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isAllDay}
+                        onChange={(e) => setIsAllDay(e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span>Dia inteiro</span>
+                    </label>
+                  </div>
+
                   <div className="flex items-center space-x-2 pt-1 flex-wrap gap-y-1">
                     <div className="flex items-center space-x-1">
                       <label className="text-[10px] text-slate-500 font-semibold">Data:</label>
@@ -855,25 +968,33 @@ export function CalendarView({ residents }: CalendarViewProps) {
                         className="p-1 border border-slate-300 rounded-lg text-xs font-semibold bg-white"
                       />
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <label className="text-[10px] text-slate-500 font-semibold">Início:</label>
-                      <input
-                        type="time"
-                        value={newStartTime}
-                        onChange={(e) => setNewStartTime(e.target.value)}
-                        className="p-1 border border-slate-300 rounded-lg text-xs font-semibold bg-white"
-                      />
-                    </div>
-                    <span className="text-slate-400 text-xs">até</span>
-                    <div className="flex items-center space-x-1">
-                      <label className="text-[10px] text-slate-500 font-semibold">Fim:</label>
-                      <input
-                        type="time"
-                        value={newEndTime}
-                        onChange={(e) => setNewEndTime(e.target.value)}
-                        className="p-1 border border-slate-300 rounded-lg text-xs font-semibold bg-white"
-                      />
-                    </div>
+                    {!isAllDay ? (
+                      <>
+                        <div className="flex items-center space-x-1">
+                          <label className="text-[10px] text-slate-500 font-semibold">Início:</label>
+                          <input
+                            type="time"
+                            value={newStartTime}
+                            onChange={(e) => setNewStartTime(e.target.value)}
+                            className="p-1 border border-slate-300 rounded-lg text-xs font-semibold bg-white"
+                          />
+                        </div>
+                        <span className="text-slate-400 text-xs">até</span>
+                        <div className="flex items-center space-x-1">
+                          <label className="text-[10px] text-slate-500 font-semibold">Fim:</label>
+                          <input
+                            type="time"
+                            value={newEndTime}
+                            onChange={(e) => setNewEndTime(e.target.value)}
+                            className="p-1 border border-slate-300 rounded-lg text-xs font-semibold bg-white"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                        O dia todo (00:00 às 23:59)
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1011,7 +1132,10 @@ export function CalendarView({ residents }: CalendarViewProps) {
                     <strong>{formatDateFullPtBr(selectedEvent.date)}</strong>
                   </div>
                   <div className="text-xs text-slate-500 mt-0.5">
-                    {selectedEvent.startTime} às {selectedEvent.endTime} (Horário Padrão de Brasília, GMT-03) • {formatDatePtBr(selectedEvent.date)}
+                    {selectedEvent.isAllDay 
+                      ? 'Dia inteiro (Horário Padrão de Brasília, GMT-03)' 
+                      : `${selectedEvent.startTime} às ${selectedEvent.endTime} (Horário Padrão de Brasília, GMT-03)`
+                    } • {formatDatePtBr(selectedEvent.date)}
                   </div>
                 </div>
               </div>

@@ -21,6 +21,7 @@ export interface CalendarEvent {
   color?: string; // hex ou tailwind class
   completed?: boolean;
   meetLink?: string;
+  isAllDay?: boolean; // Evento de dia inteiro (banner do topo padrão Google Calendar)
 }
 
 export interface CalendarCategoryConfig {
