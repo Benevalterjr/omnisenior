@@ -28,10 +28,17 @@ import { LoginView } from '@/components/Auth/LoginView';
 import { HeartHandshake } from 'lucide-react';
 
 export default function HomePage() {
-  const { currentUser, isAuthenticated, isAuthReady } = useAuth();
+  const { currentUser, isAuthenticated, isAuthReady, canAccessAdmin } = useAuth();
   
   // Navigation
   const [activeTab, setActiveTab] = useState<'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque' | 'admin'>('plantao');
+
+  // Redireciona caso um colaborador sem privilégio administrativo tente abrir a aba admin
+  useEffect(() => {
+    if (activeTab === 'admin' && !canAccessAdmin) {
+      setActiveTab('plantao');
+    }
+  }, [activeTab, canAccessAdmin]);
 
   // Main State
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -231,8 +238,8 @@ export default function HomePage() {
           <EstoqueView residents={residents} />
         )}
 
-        {/* TAB 6: Diretoria & Acessos (Administração ILPI & RBAC) */}
-        {activeTab === 'admin' && (
+        {/* TAB 6: Diretoria & Acessos (Apenas Diretor / Admin Master) */}
+        {activeTab === 'admin' && canAccessAdmin && (
           <AdminDashboardView />
         )}
       </main>

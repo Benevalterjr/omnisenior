@@ -18,10 +18,13 @@ import {
   X,
   Calendar,
   ShieldCheck,
-  LogOut
+  LogOut,
+  User
 } from 'lucide-react';
 import { seedFirestoreDatabase } from '@/lib/firebaseService';
 import { useNtpClock } from '@/lib/ntpService';
+import { ROLE_LABELS } from '@/lib/permissionsService';
+import { MeuPerfilModal } from './Auth/MeuPerfilModal';
 
 interface NavbarProps {
   activeTab: 'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque' | 'admin';
@@ -36,15 +39,17 @@ export function Navbar({
   onOpenNewResident, 
   onOpenQuickRoutine 
 }: NavbarProps) {
-  const { currentUser, role, switchUser, switchRole, shift, availableUsers, canManageResidents, canAccessAdmin, logout } = useAuth();
+  const { currentUser, role, shift, canManageResidents, canAccessAdmin, logout } = useAuth();
   const [syncing, setSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Relógio Atômico Oficial sincronizado com NTP.br (NIC.br / Observatório Nacional)
   const { timeStr, dateStr, isMounted, isSynced, isSyncing, source, offsetMs, resync: resyncNtp } = useNtpClock();
 
   if (!currentUser) return null;
+  const roleBadge = ROLE_LABELS[currentUser.role] || ROLE_LABELS.cuidador;
 
   const handleSyncData = async () => {
     setSyncing(true);
@@ -138,22 +143,26 @@ export function Navbar({
               <span className="hidden lg:inline">{syncing ? 'Sincronizando...' : 'Sincronizar Firestore'}</span>
             </button>
 
-            {/* Quick Role Switcher Pill */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <label htmlFor="user-select" className="sr-only">Trocar Perfil</label>
-              <select
-                id="user-select"
-                value={currentUser.id}
-                onChange={(e) => switchUser(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-1 pl-1 py-1"
-              >
-                {availableUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.role.toUpperCase()})
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Logged-in User Profile Badge (Each user only sees their own profile!) */}
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              className="flex items-center space-x-2.5 py-1 px-2.5 rounded-2xl bg-slate-100/90 hover:bg-slate-200/90 border border-slate-200 transition text-left cursor-pointer group shadow-2xs"
+              title="Meu Perfil: clique para ver suas credenciais e permissões"
+            >
+              <img
+                src={currentUser.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=7c3aed&color=fff`}
+                alt={currentUser.name}
+                className="w-8 h-8 rounded-xl object-cover border border-slate-200 shadow-2xs group-hover:ring-2 group-hover:ring-purple-400 transition"
+              />
+              <div className="hidden sm:block">
+                <span className="text-xs font-bold text-slate-800 block leading-tight max-w-[140px] truncate">
+                  {currentUser.name}
+                </span>
+                <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border inline-block ${roleBadge.color}`}>
+                  {roleBadge.badge}
+                </span>
+              </div>
+            </button>
 
             {/* Logout button */}
             <button
@@ -247,18 +256,20 @@ export function Navbar({
               <span>Estoque Individual</span>
             </button>
 
-            <button
-              onClick={() => setActiveTab('admin')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
-                activeTab === 'admin'
-                  ? 'bg-purple-700 text-white shadow-sm'
-                  : 'text-purple-700 hover:text-purple-900 hover:bg-purple-100/70 bg-purple-50/70 border border-purple-200'
-              }`}
-              title="Área do Diretor: Equipe, Permissões RBAC, Leitos e Instituição"
-            >
-              <ShieldCheck className={`w-4 h-4 ${activeTab === 'admin' ? 'text-white' : 'text-purple-600'}`} />
-              <span>Diretoria & Acessos</span>
-            </button>
+            {canAccessAdmin && (
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
+                  activeTab === 'admin'
+                    ? 'bg-purple-700 text-white shadow-sm'
+                    : 'text-purple-700 hover:text-purple-900 hover:bg-purple-100/70 bg-purple-50/70 border border-purple-200'
+                }`}
+                title="Área do Diretor: Equipe, Permissões RBAC, Leitos e Instituição"
+              >
+                <ShieldCheck className={`w-4 h-4 ${activeTab === 'admin' ? 'text-white' : 'text-purple-600'}`} />
+                <span>Diretoria & Acessos</span>
+              </button>
+            )}
           </nav>
 
           {/* Quick Action Buttons */}
@@ -313,17 +324,27 @@ export function Navbar({
               </button>
             )}
 
+            {canAccessAdmin && (
+              <button
+                onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }}
+                className="w-full bg-purple-700 text-white py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-2"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Diretoria & Acessos</span>
+              </button>
+            )}
+
             <button
-              onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }}
-              className="w-full bg-purple-700 text-white py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-2"
+              onClick={() => { setIsProfileModalOpen(true); setMobileMenuOpen(false); }}
+              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-2 border border-slate-200 transition"
             >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Diretoria & Acessos</span>
+              <User className="w-4 h-4 text-purple-600" />
+              <span>Meu Perfil ({currentUser.name})</span>
             </button>
 
             <button
               onClick={() => { logout(); setMobileMenuOpen(false); }}
-              className="w-full bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-2 border border-slate-200 transition"
+              className="w-full bg-rose-50 hover:bg-rose-100 text-rose-800 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-2 border border-rose-200 transition"
             >
               <LogOut className="w-4 h-4 text-rose-600" />
               <span>Sair da Conta (Logout)</span>
@@ -331,6 +352,12 @@ export function Navbar({
           </div>
         </div>
       )}
+
+      {/* Modal Meu Perfil do Colaborador Logado */}
+      <MeuPerfilModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
     </header>
   );
 }
