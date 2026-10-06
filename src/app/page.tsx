@@ -21,13 +21,14 @@ import { ResidentDetailModal } from '@/components/ResidentDetailModal';
 import { RegistroRotinaModal } from '@/components/RegistroRotinaModal';
 import { NovoResidenteModal } from '@/components/NovoResidenteModal';
 import { CheckMedicationModal } from '@/components/CheckMedicationModal';
-import { HeartHandshake, ClipboardCheck, Sparkles, CheckCircle2 } from 'lucide-react';
+import { CalendarView } from '@/components/Calendar/CalendarView';
+import { HeartHandshake } from 'lucide-react';
 
 export default function HomePage() {
   const { currentUser } = useAuth();
   
   // Navigation
-  const [activeTab, setActiveTab] = useState<'plantao' | 'rotina' | 'residentes' | 'estoque'>('plantao');
+  const [activeTab, setActiveTab] = useState<'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque'>('plantao');
 
   // Main State
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -190,7 +191,12 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* TAB 3: Residentes & Prontuários */}
+        {/* TAB 3: Agenda & Calendário (Google Calendar Style) */}
+        {activeTab === 'agenda' && (
+          <CalendarView residents={residents} />
+        )}
+
+        {/* TAB 4: Residentes & Prontuários */}
         {activeTab === 'residentes' && (
           <ResidentesListView
             residents={residents}

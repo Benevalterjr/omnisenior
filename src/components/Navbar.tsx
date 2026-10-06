@@ -15,13 +15,14 @@ import {
   Package, 
   PlusCircle,
   Menu,
-  X
+  X,
+  Calendar
 } from 'lucide-react';
 import { seedFirestoreDatabase } from '@/lib/firebaseService';
 
 interface NavbarProps {
-  activeTab: 'plantao' | 'rotina' | 'residentes' | 'estoque';
-  setActiveTab: (tab: 'plantao' | 'rotina' | 'residentes' | 'estoque') => void;
+  activeTab: 'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque';
+  setActiveTab: (tab: 'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque') => void;
   onOpenNewResident: () => void;
   onOpenQuickRoutine: () => void;
 }
@@ -175,6 +176,18 @@ export function Navbar({
             >
               <HeartHandshake className="w-4 h-4" />
               <span>Registro de Rotina (Cuidador)</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('agenda')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
+                activeTab === 'agenda'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Calendar className="w-4 h-4" />
+              <span>Agenda & Calendário</span>
             </button>
 
             <button
