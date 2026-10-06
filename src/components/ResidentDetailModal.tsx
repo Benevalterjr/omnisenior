@@ -9,7 +9,8 @@ import {
   IndividualInventoryItem, 
   UserRole,
   EvolutionType,
-  GeriatricAssessment
+  GeriatricAssessment,
+  TimelineEvent
 } from '@/types/ilpi';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -37,11 +38,14 @@ import {
   subscribeResidentEvolutions, 
   subscribeResidentInventory,
   subscribeResidentAssessments,
+  subscribeResidentTimeline,
   createEvolution,
   updateInventoryQuantity,
   createPrescription
 } from '@/lib/firebaseService';
 import { EscalasGeriatricasModal } from './EscalasGeriatricasModal';
+import { RegistroRotinaModal } from './RegistroRotinaModal';
+import { DailyTimelineView } from './Timeline/DailyTimelineView';
 
 interface ResidentDetailModalProps {
   resident: Resident;
@@ -59,14 +63,16 @@ export function ResidentDetailModal({
   onCheckMedicationClick
 }: ResidentDetailModalProps) {
   const { currentUser, canManagePrescriptions, canEditInventory } = useAuth();
-  const [activeTab, setActiveTab] = useState<'prescricoes' | 'checagens' | 'evolucoes' | 'estoque' | 'escalas'>('prescricoes');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'prescricoes' | 'checagens' | 'evolucoes' | 'estoque' | 'escalas'>('timeline');
 
   // Subcollections state with real-time listeners
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [evolutions, setEvolutions] = useState<Evolution[]>([]);
   const [inventory, setInventory] = useState<IndividualInventoryItem[]>([]);
   const [assessments, setAssessments] = useState<GeriatricAssessment[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
   const [isScalesModalOpen, setIsScalesModalOpen] = useState(false);
+  const [isRoutineModalOpen, setIsRoutineModalOpen] = useState(false);
 
   // New Evolution form state
   const [newEvoType, setNewEvoType] = useState<EvolutionType>('enfermagem');
@@ -93,12 +99,14 @@ export function ResidentDetailModal({
     const unsubEvo = subscribeResidentEvolutions(resident.id, setEvolutions);
     const unsubInv = subscribeResidentInventory(resident.id, setInventory);
     const unsubAssess = subscribeResidentAssessments(resident.id, setAssessments);
+    const unsubTimeline = subscribeResidentTimeline(resident.id, setTimelineEvents);
 
     return () => {
       unsubPresc();
       unsubEvo();
       unsubInv();
       unsubAssess();
+      unsubTimeline();
     };
   }, [resident.id]);
 
@@ -240,12 +248,24 @@ export function ResidentDetailModal({
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-slate-200 bg-slate-50 px-4 sm:px-6 flex space-x-4 shrink-0 overflow-x-auto">
+        <div className="border-b border-slate-200 bg-slate-50 px-3 sm:px-6 flex space-x-2 sm:space-x-4 shrink-0 overflow-x-auto no-scrollbar touch-manipulation">
+          <button
+            onClick={() => setActiveTab('timeline')}
+            className={`py-3 px-1 text-xs font-bold border-b-2 flex items-center space-x-1.5 transition whitespace-nowrap shrink-0 touch-manipulation ${
+              activeTab === 'timeline'
+                ? 'border-teal-600 text-teal-700 bg-white sm:bg-transparent rounded-t-lg sm:rounded-none px-2 sm:px-1'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Clock className="w-4 h-4 text-teal-600" />
+            <span>Linha do Tempo 48h ({timelineEvents.length})</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('prescricoes')}
-            className={`py-3 text-xs font-bold border-b-2 flex items-center space-x-2 transition ${
+            className={`py-3 px-1 text-xs font-bold border-b-2 flex items-center space-x-1.5 transition whitespace-nowrap shrink-0 touch-manipulation ${
               activeTab === 'prescricoes'
-                ? 'border-teal-600 text-teal-700'
+                ? 'border-teal-600 text-teal-700 bg-white sm:bg-transparent rounded-t-lg sm:rounded-none px-2 sm:px-1'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -255,9 +275,9 @@ export function ResidentDetailModal({
 
           <button
             onClick={() => setActiveTab('checagens')}
-            className={`py-3 text-xs font-bold border-b-2 flex items-center space-x-2 transition ${
+            className={`py-3 px-1 text-xs font-bold border-b-2 flex items-center space-x-1.5 transition whitespace-nowrap shrink-0 touch-manipulation ${
               activeTab === 'checagens'
-                ? 'border-teal-600 text-teal-700'
+                ? 'border-teal-600 text-teal-700 bg-white sm:bg-transparent rounded-t-lg sm:rounded-none px-2 sm:px-1'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -267,9 +287,9 @@ export function ResidentDetailModal({
 
           <button
             onClick={() => setActiveTab('evolucoes')}
-            className={`py-3 text-xs font-bold border-b-2 flex items-center space-x-2 transition ${
+            className={`py-3 px-1 text-xs font-bold border-b-2 flex items-center space-x-1.5 transition whitespace-nowrap shrink-0 touch-manipulation ${
               activeTab === 'evolucoes'
-                ? 'border-teal-600 text-teal-700'
+                ? 'border-teal-600 text-teal-700 bg-white sm:bg-transparent rounded-t-lg sm:rounded-none px-2 sm:px-1'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -279,9 +299,9 @@ export function ResidentDetailModal({
 
           <button
             onClick={() => setActiveTab('estoque')}
-            className={`py-3 text-xs font-bold border-b-2 flex items-center space-x-2 transition ${
+            className={`py-3 px-1 text-xs font-bold border-b-2 flex items-center space-x-1.5 transition whitespace-nowrap shrink-0 touch-manipulation ${
               activeTab === 'estoque'
-                ? 'border-teal-600 text-teal-700'
+                ? 'border-teal-600 text-teal-700 bg-white sm:bg-transparent rounded-t-lg sm:rounded-none px-2 sm:px-1'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -291,9 +311,9 @@ export function ResidentDetailModal({
 
           <button
             onClick={() => setActiveTab('escalas')}
-            className={`py-3 text-xs font-bold border-b-2 flex items-center space-x-2 transition ${
+            className={`py-3 px-1 text-xs font-bold border-b-2 flex items-center space-x-1.5 transition whitespace-nowrap shrink-0 touch-manipulation ${
               activeTab === 'escalas'
-                ? 'border-teal-600 text-teal-700'
+                ? 'border-teal-600 text-teal-700 bg-white sm:bg-transparent rounded-t-lg sm:rounded-none px-2 sm:px-1'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -303,8 +323,17 @@ export function ResidentDetailModal({
         </div>
 
         {/* Tab Contents */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6">
+        <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 space-y-6">
           
+          {/* TAB 0: LINHA DO TEMPO 48H (PRONTUÁRIO DIÁRIO UNIFICADO) */}
+          {activeTab === 'timeline' && (
+            <DailyTimelineView
+              resident={resident}
+              events={timelineEvents}
+              onOpenQuickRoutine={() => setIsRoutineModalOpen(true)}
+            />
+          )}
+
           {/* TAB 1: PRESCRIÇÕES */}
           {activeTab === 'prescricoes' && (
             <div className="space-y-4">
@@ -940,6 +969,17 @@ export function ResidentDetailModal({
         isOpen={isScalesModalOpen}
         onClose={() => setIsScalesModalOpen(false)}
       />
+
+      {/* Modal de Registro de Rotina Rápido disparado a partir da Linha do Tempo */}
+      {isRoutineModalOpen && (
+        <RegistroRotinaModal
+          residents={[resident]}
+          initialResidentId={resident.id}
+          isOpen={isRoutineModalOpen}
+          onClose={() => setIsRoutineModalOpen(false)}
+          onSuccess={() => setIsRoutineModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

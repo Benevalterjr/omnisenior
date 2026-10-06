@@ -246,3 +246,44 @@ export interface GeriatricAssessment {
 
 export type ShiftType = 'manha' | 'tarde' | 'noite';
 
+export type TimelineEventType = 
+  | 'medication'      // 💊 Doses administradas, recusadas, adiadas
+  | 'diet'            // 🥣 Alimentação / Aceitação
+  | 'hydration'       // 💧 Hidratação (ml)
+  | 'hygiene_bath'    // 🚿 Banho e higiene oral
+  | 'diaper_elim'     // 🧻 Troca de fralda / Diurese / Evacuação (Bristol)
+  | 'turnover'        // 🔄 Mudança de decúbito (Braden)
+  | 'vitals'          // 🩺 Sinais vitais (PA, Glicemia, Temp, SatO2, FC)
+  | 'evolution';      // 📝 Anotação clínica multiprofissional
+
+export interface TimelineEvent {
+  id: string;
+  residentId: string;
+  type: TimelineEventType;
+  timestamp: string; // ISO string
+  timeDisplay: string; // Ex: "Hoje às 14:30" ou "Ontem às 20:00"
+  hour: string; // Ex: "14:30"
+  dateKey: string; // Ex: "2026-10-06"
+  shift: ShiftType;
+  title: string;
+  description?: string;
+  status?: 'success' | 'warning' | 'alert' | 'info';
+  author: {
+    uid: string;
+    name: string;
+    role: UserRole;
+    registry?: string;
+  };
+  metrics?: {
+    hydrationMl?: number;
+    dietPercent?: string;
+    bristolScale?: number;
+    bathType?: string;
+    diuresis?: string;
+    decubitusPosition?: string;
+    vitalSigns?: VitalSigns;
+    medicationStatus?: MedicationLogStatus;
+    medicationName?: string;
+    dosage?: string;
+  };
+}

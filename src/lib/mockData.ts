@@ -1,4 +1,4 @@
-import { Resident, Prescription, MedicationLog, Evolution, IndividualInventoryItem, GeriatricAssessment, UserProfile } from '@/types/ilpi';
+import { Resident, Prescription, MedicationLog, Evolution, IndividualInventoryItem, GeriatricAssessment, UserProfile, TimelineEvent } from '@/types/ilpi';
 import { calculateBraden, calculateMorse, calculateKatz } from './geriatricScales';
 
 export const INITIAL_RESIDENTS: Resident[] = [
@@ -807,6 +807,543 @@ export const INITIAL_GERIATRIC_ASSESSMENTS: Record<string, GeriatricAssessment[]
         feeding: 1
       }),
       clinicalSummary: 'Pós-operatório de fratura de fêmur esquerdo. Acamado, dependência total para transferências e higiene (Grau III ANVISA). Risco Muito Alto de LPP (Braden 9) e Alto Risco de Queda.'
+    }
+  ]
+};
+
+// ==========================================
+// LINHA DO TEMPO CLÍNICA UNIFICADA (48 HORAS)
+// ==========================================
+const now = new Date();
+const todayDateStr = now.toISOString().split('T')[0];
+const yesterday = new Date(now);
+yesterday.setDate(yesterday.getDate() - 1);
+const yesterdayDateStr = yesterday.toISOString().split('T')[0];
+
+export const INITIAL_TIMELINE_EVENTS: Record<string, TimelineEvent[]> = {
+  'res-1': [
+    // --- HOJE (Últimas 12-24h) ---
+    {
+      id: 'tl-1-1',
+      residentId: 'res-1',
+      type: 'hydration',
+      timestamp: `${todayDateStr}T16:00:00.000Z`,
+      timeDisplay: 'Hoje às 16:00',
+      hour: '16:00',
+      dateKey: todayDateStr,
+      shift: 'tarde',
+      title: 'Hidratação Vespertina',
+      description: 'Ingestão de 200ml de água de coco fresca com boa deglutição.',
+      status: 'success',
+      author: { uid: 'cuid-2', name: 'Carlos Cuidador', role: 'cuidador' },
+      metrics: { hydrationMl: 200 }
+    },
+    {
+      id: 'tl-1-2',
+      residentId: 'res-1',
+      type: 'diaper_elim',
+      timestamp: `${todayDateStr}T15:30:00.000Z`,
+      timeDisplay: 'Hoje às 15:30',
+      hour: '15:30',
+      dateKey: todayDateStr,
+      shift: 'tarde',
+      title: 'Troca de Fralda & Evacuação Positiva',
+      description: 'Troca de fralda realizada. Diurese clara média. Evacuação presente classificada como Escala de Bristol Tipo 4 (normal/pastosa). Pele perianal íntegra.',
+      status: 'success',
+      author: { uid: 'cuid-2', name: 'Carlos Cuidador', role: 'cuidador' },
+      metrics: { bristolScale: 4, diuresis: 'normal' }
+    },
+    {
+      id: 'tl-1-3',
+      residentId: 'res-1',
+      type: 'turnover',
+      timestamp: `${todayDateStr}T14:00:00.000Z`,
+      timeDisplay: 'Hoje às 14:00',
+      hour: '14:00',
+      dateKey: todayDateStr,
+      shift: 'tarde',
+      title: 'Mudança de Decúbito (Alívio Braden)',
+      description: 'Reposicionamento para Decúbito Lateral Esquerdo (DLE) com coxins de apoio em proeminências ósseas.',
+      status: 'info',
+      author: { uid: 'cuid-2', name: 'Carlos Cuidador', role: 'cuidador' },
+      metrics: { decubitusPosition: 'DLE' }
+    },
+    {
+      id: 'tl-1-4',
+      residentId: 'res-1',
+      type: 'diet',
+      timestamp: `${todayDateStr}T12:15:00.000Z`,
+      timeDisplay: 'Hoje às 12:15',
+      hour: '12:15',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Almoço (Dieta Pastosa)',
+      description: 'Aceitação de 85% do prato principal (sopa batida com legumes e carne desfiada) + 150ml de água mineral.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { dietPercent: '85%', hydrationMl: 150 }
+    },
+    {
+      id: 'tl-1-5',
+      residentId: 'res-1',
+      type: 'vitals',
+      timestamp: `${todayDateStr}T11:30:00.000Z`,
+      timeDisplay: 'Hoje às 11:30',
+      hour: '11:30',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Aferição de Sinais Vitais Basais',
+      description: 'PA: 125/80 mmHg • Glicemia: 104 mg/dL • SatO2: 97% • Temp: 36.3°C • FC: 74 bpm. Parâmetros clínicos normotensos.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro', registry: 'COREN/SP 456789' },
+      metrics: { vitalSigns: { bp: '125/80', glucose: 104, o2: 97, temp: 36.3, hr: 74 } }
+    },
+    {
+      id: 'tl-1-6',
+      residentId: 'res-1',
+      type: 'hydration',
+      timestamp: `${todayDateStr}T10:30:00.000Z`,
+      timeDisplay: 'Hoje às 10:30',
+      hour: '10:30',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Hidratação Matinal',
+      description: 'Ingestão de 250ml de suco de caju diluído e levemente espessado.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { hydrationMl: 250 }
+    },
+    {
+      id: 'tl-1-7',
+      residentId: 'res-1',
+      type: 'diaper_elim',
+      timestamp: `${todayDateStr}T09:15:00.000Z`,
+      timeDisplay: 'Hoje às 09:15',
+      hour: '09:15',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Troca de Fralda Matinal',
+      description: 'Troca de fralda G. Diurese clara presente (aprox. 200ml). Ausência de evacuação no momento.',
+      status: 'info',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { diuresis: 'normal' }
+    },
+    {
+      id: 'tl-1-8',
+      residentId: 'res-1',
+      type: 'diet',
+      timestamp: `${todayDateStr}T08:30:00.000Z`,
+      timeDisplay: 'Hoje às 08:30',
+      hour: '08:30',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Café da Manhã (Desjejum)',
+      description: 'Aceitação de 100% da papa de aveia com banana + 200ml de chá de camomila morno.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { dietPercent: '100%', hydrationMl: 200 }
+    },
+    {
+      id: 'tl-1-9',
+      residentId: 'res-1',
+      type: 'medication',
+      timestamp: `${todayDateStr}T08:00:00.000Z`,
+      timeDisplay: 'Hoje às 08:00',
+      hour: '08:00',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Losartana Potássica 50mg',
+      description: '✓ Administrado via oral com água sem queixas. Prescrição matinal.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro', registry: 'COREN/SP 456789' },
+      metrics: { medicationName: 'Losartana Potássica', dosage: '50mg', medicationStatus: 'administered' }
+    },
+    {
+      id: 'tl-1-10',
+      residentId: 'res-1',
+      type: 'hygiene_bath',
+      timestamp: `${todayDateStr}T07:45:00.000Z`,
+      timeDisplay: 'Hoje às 07:45',
+      hour: '07:45',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Banho de Aspersão & Higiene Matinal',
+      description: 'Banho de aspersão realizado em cadeira de banho com auxílio de 1 cuidador. Higiene oral com clorexidina e hidratação da pele.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { bathType: 'aspersao' }
+    },
+    {
+      id: 'tl-1-11',
+      residentId: 'res-1',
+      type: 'medication',
+      timestamp: `${todayDateStr}T07:00:00.000Z`,
+      timeDisplay: 'Hoje às 07:00',
+      hour: '07:00',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Omeprazol 20mg',
+      description: '✓ Administrado em jejum com 50ml de água mineral.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro', registry: 'COREN/SP 456789' },
+      metrics: { medicationName: 'Omeprazol', dosage: '20mg', medicationStatus: 'administered' }
+    },
+
+    // --- ONTEM (24h a 48h anteriores) ---
+    {
+      id: 'tl-1-12',
+      residentId: 'res-1',
+      type: 'evolution',
+      timestamp: `${yesterdayDateStr}T23:30:00.000Z`,
+      timeDisplay: 'Ontem às 23:30',
+      hour: '23:30',
+      dateKey: yesterdayDateStr,
+      shift: 'noite',
+      title: 'Ronda Noturna de Enfermagem',
+      description: 'Residente dormindo em sono fisiológico tranquilo. Respiração eupnéica em ar ambiente. Grades do leito elevadas.',
+      status: 'info',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro', registry: 'COREN/SP 456789' }
+    },
+    {
+      id: 'tl-1-13',
+      residentId: 'res-1',
+      type: 'medication',
+      timestamp: `${yesterdayDateStr}T21:00:00.000Z`,
+      timeDisplay: 'Ontem às 21:00',
+      hour: '21:00',
+      dateKey: yesterdayDateStr,
+      shift: 'noite',
+      title: 'Quetiapina 25mg',
+      description: '✓ Administrado às 21:05 para indução e manutenção do sono.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro', registry: 'COREN/SP 456789' },
+      metrics: { medicationName: 'Quetiapina', dosage: '25mg', medicationStatus: 'administered' }
+    },
+    {
+      id: 'tl-1-14',
+      residentId: 'res-1',
+      type: 'diaper_elim',
+      timestamp: `${yesterdayDateStr}T20:30:00.000Z`,
+      timeDisplay: 'Ontem às 20:30',
+      hour: '20:30',
+      dateKey: yesterdayDateStr,
+      shift: 'noite',
+      title: 'Troca de Fralda Noturna (Pré-sono)',
+      description: 'Troca de fralda noturna. Diurese presente límpida. Aplicado creme de barreira.',
+      status: 'info',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { diuresis: 'normal' }
+    },
+    {
+      id: 'tl-1-15',
+      residentId: 'res-1',
+      type: 'medication',
+      timestamp: `${yesterdayDateStr}T20:00:00.000Z`,
+      timeDisplay: 'Ontem às 20:00',
+      hour: '20:00',
+      dateKey: yesterdayDateStr,
+      shift: 'noite',
+      title: 'Losartana Potássica 50mg',
+      description: '✓ Administrado via oral após o jantar.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro', registry: 'COREN/SP 456789' },
+      metrics: { medicationName: 'Losartana Potássica', dosage: '50mg', medicationStatus: 'administered' }
+    },
+    {
+      id: 'tl-1-16',
+      residentId: 'res-1',
+      type: 'diet',
+      timestamp: `${yesterdayDateStr}T18:30:00.000Z`,
+      timeDisplay: 'Ontem às 18:30',
+      hour: '18:30',
+      dateKey: yesterdayDateStr,
+      shift: 'tarde',
+      title: 'Jantar',
+      description: 'Aceitação de 80% do purê de batata com frango desfiado + 200ml de suco de maçã.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { dietPercent: '80%', hydrationMl: 200 }
+    },
+    {
+      id: 'tl-1-17',
+      residentId: 'res-1',
+      type: 'vitals',
+      timestamp: `${yesterdayDateStr}T17:00:00.000Z`,
+      timeDisplay: 'Ontem às 17:00',
+      hour: '17:00',
+      dateKey: yesterdayDateStr,
+      shift: 'tarde',
+      title: 'Sinais Vitais Vespertinos',
+      description: 'PA: 130/85 mmHg • Glicemia: 112 mg/dL • SatO2: 96% • Temp: 36.5°C.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro', registry: 'COREN/SP 456789' },
+      metrics: { vitalSigns: { bp: '130/85', glucose: 112, o2: 96, temp: 36.5 } }
+    },
+    {
+      id: 'tl-1-18',
+      residentId: 'res-1',
+      type: 'turnover',
+      timestamp: `${yesterdayDateStr}T14:00:00.000Z`,
+      timeDisplay: 'Ontem às 14:00',
+      hour: '14:00',
+      dateKey: yesterdayDateStr,
+      shift: 'tarde',
+      title: 'Mudança de Decúbito (DLD)',
+      description: 'Mudança de decúbito para Decúbito Lateral Direito (DLD). Alívio de calcâneos e sacro.',
+      status: 'info',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { decubitusPosition: 'DLD' }
+    }
+  ],
+
+  'res-2': [
+    // Seu Benedito Santos Filho (Diabético)
+    {
+      id: 'tl-2-1',
+      residentId: 'res-2',
+      type: 'vitals',
+      timestamp: `${todayDateStr}T16:00:00.000Z`,
+      timeDisplay: 'Hoje às 16:00',
+      hour: '16:00',
+      dateKey: todayDateStr,
+      shift: 'tarde',
+      title: 'Controle Glicêmico Pós-Prandial',
+      description: 'Glicemia capilar: 132 mg/dL • PA: 128/82 mmHg. Ótimo controle glicêmico vespertino.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro' },
+      metrics: { vitalSigns: { glucose: 132, bp: '128/82' } }
+    },
+    {
+      id: 'tl-2-2',
+      residentId: 'res-2',
+      type: 'hydration',
+      timestamp: `${todayDateStr}T15:00:00.000Z`,
+      timeDisplay: 'Hoje às 15:00',
+      hour: '15:00',
+      dateKey: todayDateStr,
+      shift: 'tarde',
+      title: 'Hidratação Vespertina',
+      description: 'Ingestão espontânea de 300ml de água filtrada.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { hydrationMl: 300 }
+    },
+    {
+      id: 'tl-2-3',
+      residentId: 'res-2',
+      type: 'diet',
+      timestamp: `${todayDateStr}T12:00:00.000Z`,
+      timeDisplay: 'Hoje às 12:00',
+      hour: '12:00',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Almoço (Dieta Diabético Hipossódica)',
+      description: 'Aceitação de 100% da refeição. Alimento bem mastigado, boa aceitação de saladas e legumes.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { dietPercent: '100%', hydrationMl: 200 }
+    },
+    {
+      id: 'tl-2-4',
+      residentId: 'res-2',
+      type: 'medication',
+      timestamp: `${todayDateStr}T08:00:00.000Z`,
+      timeDisplay: 'Hoje às 08:00',
+      hour: '08:00',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Metformina 850mg & Gliclazida 30mg',
+      description: '✓ Administrados após o café da manhã. Glicemia de jejum aferida previamente: 118 mg/dL.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro' },
+      metrics: { vitalSigns: { glucose: 118 }, medicationStatus: 'administered' }
+    },
+    {
+      id: 'tl-2-5',
+      residentId: 'res-2',
+      type: 'hygiene_bath',
+      timestamp: `${todayDateStr}T07:30:00.000Z`,
+      timeDisplay: 'Hoje às 07:30',
+      hour: '07:30',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Banho de Aspersão Independente com Supervisão',
+      description: 'Residente tomou banho de chuveiro de forma independente com supervisão do cuidador. Secagem atenta interdigital dos pés.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { bathType: 'aspersao' }
+    },
+    {
+      id: 'tl-2-6',
+      residentId: 'res-2',
+      type: 'diaper_elim',
+      timestamp: `${yesterdayDateStr}T16:30:00.000Z`,
+      timeDisplay: 'Ontem às 16:30',
+      hour: '16:30',
+      dateKey: yesterdayDateStr,
+      shift: 'tarde',
+      title: 'Evacuação Fisiológica',
+      description: 'Evacuação em vaso sanitário com auxílio. Fezes consistentes Bristol Tipo 3. Diurese clara normal.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { bristolScale: 3, diuresis: 'normal' }
+    }
+  ],
+
+  'res-3': [
+    // Dona Maria de Lourdes Paiva (Alzheimer leve, constipação)
+    {
+      id: 'tl-3-1',
+      residentId: 'res-3',
+      type: 'hydration',
+      timestamp: `${todayDateStr}T16:30:00.000Z`,
+      timeDisplay: 'Hoje às 16:30',
+      hour: '16:30',
+      dateKey: todayDateStr,
+      shift: 'tarde',
+      title: 'Hidratação & Estimulação Hídrica',
+      description: 'Oferecido e aceito 250ml de água com sabor de hortelã.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { hydrationMl: 250 }
+    },
+    {
+      id: 'tl-3-2',
+      residentId: 'res-3',
+      type: 'medication',
+      timestamp: `${todayDateStr}T14:00:00.000Z`,
+      timeDisplay: 'Hoje às 14:00',
+      hour: '14:00',
+      dateKey: todayDateStr,
+      shift: 'tarde',
+      title: 'Lactulose Xarope 15ml',
+      description: '✓ Administrado laxativo osmótico conforme prescrição médica para constipação intestinal.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro' },
+      metrics: { medicationName: 'Lactulose', dosage: '15ml', medicationStatus: 'administered' }
+    },
+    {
+      id: 'tl-3-3',
+      residentId: 'res-3',
+      type: 'evolution',
+      timestamp: `${todayDateStr}T10:00:00.000Z`,
+      timeDisplay: 'Hoje às 10:00',
+      hour: '10:00',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Atividade de Musicoterapia & Convivência',
+      description: 'Participou ativamente do coral no jardim. Sorridente, reconheceu cuidadores e interagiu com colegas.',
+      status: 'info',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' }
+    },
+    {
+      id: 'tl-3-4',
+      residentId: 'res-3',
+      type: 'medication',
+      timestamp: `${todayDateStr}T08:00:00.000Z`,
+      timeDisplay: 'Hoje às 08:00',
+      hour: '08:00',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Memantina 10mg',
+      description: '✓ Administrado via oral com leite morno.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { medicationName: 'Memantina', dosage: '10mg', medicationStatus: 'administered' }
+    },
+    {
+      id: 'tl-3-5',
+      residentId: 'res-3',
+      type: 'diaper_elim',
+      timestamp: `${yesterdayDateStr}T15:00:00.000Z`,
+      timeDisplay: 'Ontem às 15:00',
+      hour: '15:00',
+      dateKey: yesterdayDateStr,
+      shift: 'tarde',
+      title: 'Troca de Fralda - Fezes Ressecadas (Bristol 2)',
+      description: 'Evacuação em pequeno volume, fezes duras em grumos (Bristol 2). Comunicado enfermeiro para ajuste hídrico e lactulose.',
+      status: 'warning',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { bristolScale: 2, diuresis: 'normal' }
+    }
+  ],
+
+  'res-4': [
+    // Seu Antônio Carlos Fagundes (Acamado, Braden 9, Pós-Op fêmur)
+    {
+      id: 'tl-4-1',
+      residentId: 'res-4',
+      type: 'turnover',
+      timestamp: `${todayDateStr}T16:00:00.000Z`,
+      timeDisplay: 'Hoje às 16:00',
+      hour: '16:00',
+      dateKey: todayDateStr,
+      shift: 'tarde',
+      title: 'Mudança de Decúbito de 2h/2h (DLD)',
+      description: 'Posicionamento em Decúbito Lateral Direito. Inspeção de região sacra e trocânteres: pele íntegra sem hiperemia.',
+      status: 'info',
+      author: { uid: 'cuid-2', name: 'Carlos Cuidador', role: 'cuidador' },
+      metrics: { decubitusPosition: 'DLD' }
+    },
+    {
+      id: 'tl-4-2',
+      residentId: 'res-4',
+      type: 'turnover',
+      timestamp: `${todayDateStr}T14:00:00.000Z`,
+      timeDisplay: 'Hoje às 14:00',
+      hour: '14:00',
+      dateKey: todayDateStr,
+      shift: 'tarde',
+      title: 'Mudança de Decúbito de 2h/2h (DLE)',
+      description: 'Posicionamento em Decúbito Lateral Esquerdo com travesseiro de abdução entre os membros inferiores.',
+      status: 'info',
+      author: { uid: 'cuid-2', name: 'Carlos Cuidador', role: 'cuidador' },
+      metrics: { decubitusPosition: 'DLE' }
+    },
+    {
+      id: 'tl-4-3',
+      residentId: 'res-4',
+      type: 'medication',
+      timestamp: `${todayDateStr}T12:00:00.000Z`,
+      timeDisplay: 'Hoje às 12:00',
+      hour: '12:00',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'AAS Infantil 100mg',
+      description: '✓ Administrado via oral macerado com iogurte após o almoço.',
+      status: 'success',
+      author: { uid: 'enf-1', name: 'Enf. Juliana Ramos', role: 'enfermeiro' },
+      metrics: { medicationName: 'AAS Infantil', dosage: '100mg', medicationStatus: 'administered' }
+    },
+    {
+      id: 'tl-4-4',
+      residentId: 'res-4',
+      type: 'medication',
+      timestamp: `${todayDateStr}T08:25:00.000Z`,
+      timeDisplay: 'Hoje às 08:25',
+      hour: '08:25',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Enalapril 10mg (Recusa Pontual)',
+      description: '✗ Recusado: Residente relatou enjoo matinal e cuspiu o comprimido. Enfermagem notificada; dose remarcada após melhora do enjoo.',
+      status: 'alert',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { medicationName: 'Enalapril', dosage: '10mg', medicationStatus: 'refused' }
+    },
+    {
+      id: 'tl-4-5',
+      residentId: 'res-4',
+      type: 'hygiene_bath',
+      timestamp: `${todayDateStr}T07:15:00.000Z`,
+      timeDisplay: 'Hoje às 07:15',
+      hour: '07:15',
+      dateKey: todayDateStr,
+      shift: 'manha',
+      title: 'Banho Completo no Leito',
+      description: 'Banho no leito realizado por 2 profissionais devido à cirurgia no fêmur. Troca completa de roupa de cama e curativo de alívio.',
+      status: 'success',
+      author: { uid: 'cuid-1', name: 'Maria Silva', role: 'cuidador' },
+      metrics: { bathType: 'leito' }
     }
   ]
 };

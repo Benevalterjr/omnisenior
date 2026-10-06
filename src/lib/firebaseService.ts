@@ -20,7 +20,8 @@ import {
   CaregiverRoutine,
   MedicationLogStatus,
   UserRole,
-  GeriatricAssessment
+  GeriatricAssessment,
+  TimelineEvent
 } from '@/types/ilpi';
 import { 
   INITIAL_RESIDENTS, 
@@ -28,7 +29,8 @@ import {
   INITIAL_MEDICATION_LOGS, 
   INITIAL_EVOLUTIONS, 
   INITIAL_INVENTORY,
-  INITIAL_GERIATRIC_ASSESSMENTS
+  INITIAL_GERIATRIC_ASSESSMENTS,
+  INITIAL_TIMELINE_EVENTS
 } from './mockData';
 
 // Helper: Check Medication (exact function required in user spec)
@@ -54,6 +56,36 @@ export async function checkMedication(
       updatePayload.notes = notes;
     }
     await updateDoc(logRef, updatePayload);
+
+    // Emite evento na linha do tempo clínica 24h/48h
+    try {
+      const now = new Date();
+      const h = now.getHours();
+      const shift = h >= 7 && h < 13 ? 'manha' : h >= 13 && h < 19 ? 'tarde' : 'noite';
+      await createTimelineEvent(residentId, {
+        residentId,
+        type: 'medication',
+        timestamp: now.toISOString(),
+        timeDisplay: `Hoje às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`,
+        hour: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        dateKey: now.toISOString().split('T')[0],
+        shift,
+        title: status === 'administered' ? 'Medicação Administrada' : status === 'refused' ? 'Medicação Recusada' : 'Medicação Adiada',
+        description: notes ? `Status: ${status}. Obs: ${notes}` : `Status: ${status}. Administrado conforme prescrição.`,
+        status: status === 'administered' ? 'success' : status === 'refused' ? 'alert' : 'warning',
+        author: {
+          uid: user.uid,
+          name: user.name,
+          role: user.role || 'cuidador'
+        },
+        metrics: {
+          medicationStatus: status
+        }
+      });
+    } catch (e) {
+      // non-blocking
+    }
+
     return true;
   } catch (error) {
     console.warn('Firestore write failed, falling back to local simulation:', error);
@@ -234,6 +266,54 @@ export function subscribeResidentAssessments(
   }
 }
 
+// Subscribe to resident unified 24h/48h timeline events
+export function subscribeResidentTimeline(
+  residentId: string, 
+  callback: (events: TimelineEvent[]) => void
+) {
+  try {
+    const colRef = collection(db, `residents/${residentId}/timeline_events`);
+    const q = query(colRef, orderBy('timestamp', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const events: TimelineEvent[] = snapshot.docs.map(d => ({
+          id: d.id,
+          residentId,
+          ...d.data()
+        } as TimelineEvent));
+        callback(events);
+      } else {
+        callback(INITIAL_TIMELINE_EVENTS[residentId] || []);
+      }
+    }, (error) => {
+      console.warn(`Firestore error for timeline events (${residentId}):`, error);
+      callback(INITIAL_TIMELINE_EVENTS[residentId] || []);
+    });
+    return unsubscribe;
+  } catch (err) {
+    callback(INITIAL_TIMELINE_EVENTS[residentId] || []);
+    return () => {};
+  }
+}
+
+// Add a timeline event to resident 24h/48h chart
+export async function createTimelineEvent(
+  residentId: string,
+  eventData: Omit<TimelineEvent, 'id'>
+): Promise<string> {
+  try {
+    const colRef = collection(db, `residents/${residentId}/timeline_events`);
+    const docRef = await addDoc(colRef, {
+      ...eventData,
+      createdAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.warn('Error creating timeline event in Firestore:', error);
+    return 'local-tl-' + Date.now();
+  }
+}
+
 // Add a new resident
 export async function createResident(residentData: Omit<Resident, 'id'>): Promise<string> {
   try {
@@ -384,6 +464,92 @@ export async function recordQuickCaregiverRoutine(
 
   const evolutionText = `[Registro Rápido de Rotina] ${bathText} ${dietText} ${elimText}${notesText}`;
 
+  // Emit structured timeline events for the 24h/48h chart
+  try {
+    const now = new Date();
+    const timeDisplay = `Hoje às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    const hour = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dateKey = now.toISOString().split('T')[0];
+    const h = now.getHours();
+    const shift = h >= 7 && h < 13 ? 'manha' : h >= 13 && h < 19 ? 'tarde' : 'noite';
+
+    // 1. Dieta & Hidratação
+    await createTimelineEvent(routine.residentId, {
+      residentId: routine.residentId,
+      type: 'diet',
+      timestamp: now.toISOString(),
+      timeDisplay,
+      hour,
+      dateKey,
+      shift,
+      title: `Alimentação (${routine.dietAcceptance}) & Hidratação`,
+      description: `Aceitação alimentar: ${routine.dietAcceptance} • Hidratação: ${routine.hydrationMl}ml ingeridos.`,
+      status: routine.dietAcceptance === 'recusou' ? 'alert' : 'success',
+      author: routine.caregiver,
+      metrics: {
+        dietPercent: routine.dietAcceptance,
+        hydrationMl: routine.hydrationMl
+      }
+    });
+
+    // 2. Fralda & Eliminações
+    await createTimelineEvent(routine.residentId, {
+      residentId: routine.residentId,
+      type: 'diaper_elim',
+      timestamp: new Date(now.getTime() - 1000).toISOString(),
+      timeDisplay,
+      hour,
+      dateKey,
+      shift,
+      title: routine.evacuation ? `Troca de Fralda & Evacuação (Bristol ${routine.bristolScale || 4})` : 'Troca de Fralda & Diurese',
+      description: `Diurese: ${routine.diuresis}. Evacuação: ${routine.evacuation ? `Positiva (Escala de Bristol Tipo ${routine.bristolScale || 4})` : 'Não evacuada no turno'}.`,
+      status: routine.evacuation ? 'success' : 'info',
+      author: routine.caregiver,
+      metrics: {
+        diuresis: routine.diuresis,
+        bristolScale: routine.evacuation ? routine.bristolScale : undefined
+      }
+    });
+
+    // 3. Banho (se previsto)
+    if (routine.bath !== 'nao_previsto') {
+      await createTimelineEvent(routine.residentId, {
+        residentId: routine.residentId,
+        type: 'hygiene_bath',
+        timestamp: new Date(now.getTime() - 2000).toISOString(),
+        timeDisplay,
+        hour,
+        dateKey,
+        shift,
+        title: routine.bath === 'recusou' ? 'Recusa de Banho' : `Banho (${routine.bath === 'aspersao' ? 'Aspersão' : 'No Leito'})`,
+        description: bathText,
+        status: routine.bath === 'recusou' ? 'warning' : 'success',
+        author: routine.caregiver,
+        metrics: { bathType: routine.bath }
+      });
+    }
+
+    // 4. Sinais Vitais (se preenchidos)
+    if (routine.vitalSigns && Object.keys(routine.vitalSigns).length > 0) {
+      await createTimelineEvent(routine.residentId, {
+        residentId: routine.residentId,
+        type: 'vitals',
+        timestamp: new Date(now.getTime() - 3000).toISOString(),
+        timeDisplay,
+        hour,
+        dateKey,
+        shift,
+        title: 'Aferição de Sinais Vitais',
+        description: `PA: ${routine.vitalSigns.bp || '--'} • Glicemia: ${routine.vitalSigns.glucose ? routine.vitalSigns.glucose + ' mg/dL' : '--'} • Temp: ${routine.vitalSigns.temp ? routine.vitalSigns.temp + '°C' : '--'} • SatO2: ${routine.vitalSigns.o2 ? routine.vitalSigns.o2 + '%' : '--'}`,
+        status: 'success',
+        author: routine.caregiver,
+        metrics: { vitalSigns: routine.vitalSigns }
+      });
+    }
+  } catch (e) {
+    console.warn('Erro ao criar eventos de timeline a partir da rotina:', e);
+  }
+
   return await createEvolution(routine.residentId, {
     author: routine.caregiver,
     date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -483,6 +649,26 @@ export async function seedFirestoreDatabase(): Promise<{ success: boolean; messa
           morse: a.morse,
           katz: a.katz,
           clinicalSummary: a.clinicalSummary || '',
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      }
+
+      // Seed Timeline Events (24h/48h Unified Clinical Chart)
+      const timelineEvents = INITIAL_TIMELINE_EVENTS[resident.id] || [];
+      for (const t of timelineEvents) {
+        await setDoc(doc(db, `residents/${resident.id}/timeline_events`, t.id), {
+          residentId: t.residentId,
+          type: t.type,
+          timestamp: t.timestamp,
+          timeDisplay: t.timeDisplay,
+          hour: t.hour,
+          dateKey: t.dateKey,
+          shift: t.shift,
+          title: t.title,
+          description: t.description || '',
+          status: t.status || 'info',
+          author: t.author,
+          metrics: t.metrics || null,
           createdAt: serverTimestamp()
         }, { merge: true });
       }

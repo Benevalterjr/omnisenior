@@ -416,10 +416,10 @@ export function DutyBoard({
               </div>
 
               {/* Resident Footer Actions */}
-              <div className="bg-slate-50 px-4 py-2.5 border-t border-slate-100 flex items-center justify-between">
+              <div className="bg-slate-50 px-3 sm:px-4 py-2 border-t border-slate-100 flex items-center justify-between gap-2">
                 <button
                   onClick={() => onOpenQuickRoutine(resident.id)}
-                  className="text-xs font-semibold text-teal-700 hover:text-teal-900 flex items-center space-x-1 transition"
+                  className="text-xs font-semibold text-teal-700 hover:text-teal-900 flex items-center space-x-1.5 transition py-1.5 px-2 rounded-lg hover:bg-teal-50 touch-manipulation active:scale-95"
                 >
                   <HeartHandshake className="w-3.5 h-3.5" />
                   <span>Rotina Rápida</span>
@@ -427,10 +427,11 @@ export function DutyBoard({
 
                 <button
                   onClick={() => onOpenResidentModal(resident)}
-                  className="text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center space-x-1 transition"
+                  className="text-xs font-bold text-slate-800 hover:text-teal-700 flex items-center space-x-1.5 transition py-1.5 px-2.5 rounded-lg bg-white border border-slate-200 shadow-2xs hover:bg-slate-50 touch-manipulation active:scale-95"
+                  title="Abrir Prontuário Diário e Linha do Tempo das últimas 48h"
                 >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>Ver Prontuário Completo</span>
+                  <Clock className="w-3.5 h-3.5 text-teal-600" />
+                  <span>Prontuário 48h</span>
                 </button>
               </div>
             </div>
