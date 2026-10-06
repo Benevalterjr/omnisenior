@@ -16,7 +16,12 @@ import {
   KeyRound,
   Edit3,
   UserCheck,
-  Power
+  Power,
+  Lock,
+  Eye,
+  EyeOff,
+  Sparkles,
+  Copy
 } from 'lucide-react';
 
 interface NovoProfissionalModalProps {
@@ -34,22 +39,37 @@ export function NovoProfissionalModal({
 }: NovoProfissionalModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState<UserRole>('cuidador');
   const [registry, setRegistry] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [shiftPreference, setShiftPreference] = useState<'manha' | 'tarde' | 'noite' | 'comercial' | 'escala_12x36'>('manha');
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
+  const [copiedAccess, setCopiedAccess] = useState(false);
   
   // Custom permissions overrides
   const [customPermissions, setCustomPermissions] = useState<UserPermissions>(DEFAULT_ROLE_PERMISSIONS.cuidador);
   const [showPermissionsCustomizer, setShowPermissionsCustomizer] = useState(false);
+
+  const generateRandomPassword = () => {
+    const prefixes = ['Senior', 'Omni', 'Vida', 'Clinica', 'Care'];
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const number = Math.floor(1000 + Math.random() * 9000);
+    const symbols = ['!', '@', '#', '$'];
+    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+    const gen = `${prefix}#${number}${symbol}`;
+    setPassword(gen);
+    setShowPassword(true);
+  };
 
   // Sync state whenever modal opens or userToEdit changes
   useEffect(() => {
     if (userToEdit) {
       setName(userToEdit.name || '');
       setEmail(userToEdit.email || '');
+      setPassword(userToEdit.password || '');
       setPhone(userToEdit.phone || '');
       setRole(userToEdit.role || 'cuidador');
       setRegistry(userToEdit.registry || '');
@@ -58,9 +78,11 @@ export function NovoProfissionalModal({
       setStatus(userToEdit.status || 'active');
       setCustomPermissions(getUserPermissions(userToEdit));
       setShowPermissionsCustomizer(!!userToEdit.customPermissions);
+      setShowPassword(false);
     } else {
       setName('');
       setEmail('');
+      generateRandomPassword();
       setPhone('');
       setRole('cuidador');
       setRegistry('Cert. Cuidador ILPI #');
@@ -76,10 +98,8 @@ export function NovoProfissionalModal({
 
   const handleRoleChange = (newRole: UserRole) => {
     setRole(newRole);
-    // If not editing or user explicitly changes role, update default permissions
     setCustomPermissions(DEFAULT_ROLE_PERMISSIONS[newRole]);
 
-    // Pre-fill suggested registry placeholder if empty or placeholder
     if (!registry || registry.includes('/') || registry.includes('#')) {
       if (newRole === 'medico') setRegistry('CRM/SP ');
       else if (newRole === 'enfermeiro') setRegistry('COREN/SP ');
@@ -91,6 +111,20 @@ export function NovoProfissionalModal({
     }
   };
 
+  const handleCopyAccess = () => {
+    const roleInfo = ROLE_LABELS[role] || ROLE_LABELS.cuidador;
+    const text = `🏥 *OmniSenior ILPI — Acesso ao Sistema*\n` +
+      `👤 *Colaborador:* ${name || 'Novo Colaborador'}\n` +
+      `💼 *Cargo:* ${roleInfo.title}\n` +
+      `📧 *Login/E-mail:* ${email}\n` +
+      `🔑 *Senha de Acesso:* ${password}\n` +
+      `🌐 *Acesse o aplicativo com suas credenciais.*`;
+
+    navigator.clipboard.writeText(text);
+    setCopiedAccess(true);
+    setTimeout(() => setCopiedAccess(false), 3000);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
@@ -98,6 +132,7 @@ export function NovoProfissionalModal({
     onSave({
       name: name.trim(),
       email: email.trim(),
+      password: password.trim() || userToEdit?.password || '123456',
       phone: phone.trim() || undefined,
       role,
       registry: registry.trim() || undefined,
@@ -132,12 +167,12 @@ export function NovoProfissionalModal({
             </div>
             <div>
               <h3 className="text-lg font-bold tracking-tight">
-                {isEditing ? `Editar Profissional: ${userToEdit.name}` : 'Cadastrar Novo Colaborador'}
+                {isEditing ? `Editar Profissional: ${userToEdit.name}` : 'Cadastrar Conta de Acesso de Colaborador'}
               </h3>
               <p className="text-xs text-purple-200/80">
                 {isEditing 
-                  ? 'Atualize dados cadastrais, cargo, escala e permissões clínicas.' 
-                  : 'Adicione médicos, enfermeiros, cuidadores e configure seus acessos clínicos.'}
+                  ? 'Atualize dados cadastrais, senha de acesso e permissões clínicas.' 
+                  : 'O Admin Master define o login, senha e permissões de cada colaborador.'}
               </p>
             </div>
           </div>
@@ -171,7 +206,7 @@ export function NovoProfissionalModal({
                 }`}
               >
                 <Power className="w-3.5 h-3.5" />
-                <span>{status === 'active' ? 'Desativar Usuário' : 'Reativar Usuário'}</span>
+                <span>{status === 'active' ? 'Bloquear Acesso' : 'Desbloquear Acesso'}</span>
               </button>
             </div>
           )}
@@ -206,11 +241,87 @@ export function NovoProfissionalModal({
             </div>
           </div>
 
+          {/* Credentials Box: Email + Password */}
+          <div className="bg-purple-50/60 border border-purple-200 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-purple-950 flex items-center space-x-1.5">
+                <Lock className="w-3.5 h-3.5 text-purple-700" />
+                <span>Credenciais de Acesso (Login & Senha Definidos pelo Admin Master)</span>
+              </span>
+              <button
+                type="button"
+                onClick={generateRandomPassword}
+                className="text-xs text-purple-700 font-bold hover:underline flex items-center space-x-1"
+              >
+                <Sparkles className="w-3 h-3 text-purple-600" />
+                <span>Gerar Senha Forte</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  E-mail de Login *
+                </label>
+                <div className="relative">
+                  <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="profissional@omnisenior.com.br"
+                    className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  {isEditing ? 'Senha de Acesso (Editar ou Manter)' : 'Senha de Acesso Provisória *'}
+                </label>
+                <div className="relative">
+                  <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required={!isEditing}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={isEditing ? 'Digite nova senha ou mantenha atual' : 'Senha de acesso'}
+                    className="w-full text-xs pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Copy Credentials Quick Action */}
+            {email && password && (
+              <div className="pt-1 flex items-center justify-between text-[11px] border-t border-purple-200/60">
+                <span className="text-purple-800">Enviar credenciais ao colaborador:</span>
+                <button
+                  type="button"
+                  onClick={handleCopyAccess}
+                  className="text-purple-900 font-bold hover:text-purple-950 flex items-center space-x-1 bg-white px-2.5 py-1 rounded-lg border border-purple-300 shadow-2xs"
+                >
+                  {copiedAccess ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-purple-700" />}
+                  <span>{copiedAccess ? 'Copiado para Área de Transferência!' : 'Copiar Acesso para WhatsApp'}</span>
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Name & Registry */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Nome Completo *
+                Nome Completo do Profissional *
               </label>
               <input
                 type="text"
@@ -236,25 +347,8 @@ export function NovoProfissionalModal({
             </div>
           </div>
 
-          {/* Email & Phone */}
+          {/* Phone & Specialty */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                E-mail de Acesso *
-              </label>
-              <div className="relative">
-                <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="profissional@omnisenior.com.br"
-                  className="w-full text-xs pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">
                 Telefone / WhatsApp
@@ -270,10 +364,7 @@ export function NovoProfissionalModal({
                 />
               </div>
             </div>
-          </div>
 
-          {/* Specialty & Shift Preference */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-slate-700 block mb-1">
                 Especialidade ou Setor
@@ -286,23 +377,24 @@ export function NovoProfissionalModal({
                 className="w-full text-xs p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-purple-500 focus:outline-none"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Escala / Turno Principal
-              </label>
-              <select
-                value={shiftPreference}
-                onChange={(e) => setShiftPreference(e.target.value as any)}
-                className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-              >
-                <option value="manha">Turno Manhã (07h às 13h)</option>
-                <option value="tarde">Turno Tarde (13h às 19h)</option>
-                <option value="noite">Turno Noite / Plantão (19h às 07h)</option>
-                <option value="escala_12x36">Plantão 12x36</option>
-                <option value="comercial">Comercial / Administrativo (08h às 17h)</option>
-              </select>
-            </div>
+          {/* Shift Preference */}
+          <div>
+            <label className="text-xs font-semibold text-slate-700 block mb-1">
+              Escala / Turno Principal de Atuação
+            </label>
+            <select
+              value={shiftPreference}
+              onChange={(e) => setShiftPreference(e.target.value as any)}
+              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            >
+              <option value="manha">Turno Manhã (07h às 13h)</option>
+              <option value="tarde">Turno Tarde (13h às 19h)</option>
+              <option value="noite">Turno Noite / Plantão (19h às 07h)</option>
+              <option value="escala_12x36">Plantão 12x36</option>
+              <option value="comercial">Comercial / Administrativo (08h às 17h)</option>
+            </select>
           </div>
 
           {/* Granular Permissions Overrides Section */}
@@ -383,7 +475,7 @@ export function NovoProfissionalModal({
               className="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-md transition flex items-center space-x-1.5"
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>{isEditing ? 'Salvar Alterações' : 'Cadastrar & Liberar Acesso'}</span>
+              <span>{isEditing ? 'Salvar Alterações' : 'Criar Conta de Acesso'}</span>
             </button>
           </div>
 

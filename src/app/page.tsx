@@ -24,10 +24,11 @@ import { CheckMedicationModal } from '@/components/CheckMedicationModal';
 import { EscalasGeriatricasModal } from '@/components/EscalasGeriatricasModal';
 import { CalendarView } from '@/components/Calendar/CalendarView';
 import { AdminDashboardView } from '@/components/Admin/AdminDashboardView';
+import { LoginView } from '@/components/Auth/LoginView';
 import { HeartHandshake } from 'lucide-react';
 
 export default function HomePage() {
-  const { currentUser } = useAuth();
+  const { currentUser, isAuthenticated, isAuthReady } = useAuth();
   
   // Navigation
   const [activeTab, setActiveTab] = useState<'plantao' | 'rotina' | 'agenda' | 'residentes' | 'estoque' | 'admin'>('plantao');
@@ -111,6 +112,21 @@ export default function HomePage() {
     setQuickRoutineResidentId(resId);
     setIsQuickRoutineModalOpen(true);
   };
+
+  // Se a autenticação estiver carregando sessão anterior do localStorage
+  if (!isAuthReady) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center space-y-4">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-teal-400"></div>
+        <p className="text-xs text-slate-400 font-medium">Iniciando OmniSenior ILPI...</p>
+      </div>
+    );
+  }
+
+  // Ninguém pode acessar o aplicativo sem usuário e senha válidos
+  if (!isAuthenticated || !currentUser) {
+    return <LoginView />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100">

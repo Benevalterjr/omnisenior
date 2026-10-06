@@ -17,6 +17,7 @@ import {
   getUserPermissions 
 } from '@/lib/permissionsService';
 import { NovoProfissionalModal } from './NovoProfissionalModal';
+import { ManagePasswordModal } from './ManagePasswordModal';
 import { 
   ShieldCheck, 
   Users, 
@@ -52,7 +53,8 @@ export function AdminDashboardView() {
     updateUser, 
     toggleUserStatus, 
     deleteUser, 
-    switchUser 
+    switchUser,
+    resetUserPassword
   } = useAuth();
 
   // Tab State
@@ -76,6 +78,10 @@ export function AdminDashboardView() {
 
   // Selected User for Permissions Edit
   const [editingPermissionsUser, setEditingPermissionsUser] = useState<UserProfile | null>(null);
+
+  // Selected User for Password Management
+  const [userForPasswordModal, setUserForPasswordModal] = useState<UserProfile | null>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   // Filtered Users
   const filteredUsers = users.filter(u => {
@@ -136,10 +142,14 @@ export function AdminDashboardView() {
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
-            <div className="flex items-center space-x-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-400/30 flex items-center space-x-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Área Restrita da Diretoria</span>
+              </span>
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center space-x-1.5">
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Admin Master: Emissão de Contas & Senhas</span>
               </span>
               <span className="text-xs text-purple-200/80">
                 {clinicSettings.sanitaryLicense.split('(')[0]}
@@ -436,6 +446,18 @@ export function AdminDashboardView() {
                       >
                         <Edit3 className="w-3.5 h-3.5 text-purple-600" />
                         <span>Editar</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setUserForPasswordModal(user);
+                          setIsPasswordModalOpen(true);
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-xs font-bold transition flex items-center space-x-1"
+                        title="Ver ou redefinir senha deste colaborador"
+                      >
+                        <KeyRound className="w-3.5 h-3.5 text-indigo-600" />
+                        <span className="hidden sm:inline">Senha</span>
                       </button>
 
                       <button
@@ -961,6 +983,19 @@ export function AdminDashboardView() {
           setEditingPermissionsUser(null);
         }}
         userToEdit={editingPermissionsUser}
+      />
+
+      {/* Modal de Gestão de Senhas de Acesso pelo Admin Master */}
+      <ManagePasswordModal
+        user={userForPasswordModal}
+        isOpen={isPasswordModalOpen}
+        onClose={() => {
+          setIsPasswordModalOpen(false);
+          setUserForPasswordModal(null);
+        }}
+        onSavePassword={(userId, newPassword) => {
+          resetUserPassword(userId, newPassword);
+        }}
       />
 
     </div>

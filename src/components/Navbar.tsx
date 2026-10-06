@@ -17,7 +17,8 @@ import {
   Menu,
   X,
   Calendar,
-  ShieldCheck
+  ShieldCheck,
+  LogOut
 } from 'lucide-react';
 import { seedFirestoreDatabase } from '@/lib/firebaseService';
 import { useNtpClock } from '@/lib/ntpService';
@@ -35,13 +36,15 @@ export function Navbar({
   onOpenNewResident, 
   onOpenQuickRoutine 
 }: NavbarProps) {
-  const { currentUser, role, switchUser, switchRole, shift, availableUsers, canManageResidents, canAccessAdmin } = useAuth();
+  const { currentUser, role, switchUser, switchRole, shift, availableUsers, canManageResidents, canAccessAdmin, logout } = useAuth();
   const [syncing, setSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Relógio Atômico Oficial sincronizado com NTP.br (NIC.br / Observatório Nacional)
   const { timeStr, dateStr, isMounted, isSynced, isSyncing, source, offsetMs, resync: resyncNtp } = useNtpClock();
+
+  if (!currentUser) return null;
 
   const handleSyncData = async () => {
     setSyncing(true);
@@ -151,6 +154,16 @@ export function Navbar({
                 ))}
               </select>
             </div>
+
+            {/* Logout button */}
+            <button
+              onClick={logout}
+              title="Encerrar sessão / Sair do sistema"
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition flex items-center space-x-1"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="text-xs font-semibold hidden md:inline">Sair</span>
+            </button>
 
             {/* Mobile menu button */}
             <button
@@ -306,6 +319,14 @@ export function Navbar({
             >
               <ShieldCheck className="w-4 h-4" />
               <span>Diretoria & Acessos</span>
+            </button>
+
+            <button
+              onClick={() => { logout(); setMobileMenuOpen(false); }}
+              className="w-full bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center space-x-2 border border-slate-200 transition"
+            >
+              <LogOut className="w-4 h-4 text-rose-600" />
+              <span>Sair da Conta (Logout)</span>
             </button>
           </div>
         </div>

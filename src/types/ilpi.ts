@@ -25,6 +25,7 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  password?: string; // Senha cadastrada pelo Admin Master
   role: UserRole;
   registry?: string; // COREN, CRM, CREFITO, CRN, CRP, etc.
   phone?: string;
